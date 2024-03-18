@@ -1,5 +1,5 @@
 import { JSON, Ledger, Context } from "@klave/sdk";
-import { AccountsInput, RenameAccountInput, CreateAccountInput, HideAccountInput, UnhideAccountInput, SetCustomerRefIdInput, SetAutoFuelInput, BulkCreateAccountInput } from "./inputs/types";
+import { AccountsInput, RenameAccountInput, CreateAccountInput, HideAccountInput, UnhideAccountInput, SetCustomerRefIdInput, SetAutoFuelInput, BulkCreateAccountInput, SignInput } from "./inputs/types";
 import { Account } from "./account";
 import { Asset } from "./asset";
 import { Vault } from "./vault";
@@ -140,4 +140,15 @@ export function bulkCreateAccount(input: BulkCreateAccountInput): void {
     }
     vault.save();
     emit("Accounts created successfully");
+}
+
+/**
+ * @transaction 
+ * 
+ */
+export function sign(input: SignInput) : void {
+    let vault = new Vault();
+    vault.load();
+    vault.sign(input.accountId, input.assetId, input.payload);
+    emit("Signature returned successfully");
 }

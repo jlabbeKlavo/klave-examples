@@ -1,10 +1,14 @@
 import { JSON } from "@klave/sdk";
-import { amount } from '../../klave/types';
+import { amount, emit } from '../../klave/types';
 import { Address } from './address';
+import { sign } from '../../klave/crypto';
+import { SignInput } from '../../klave/crypto';
 
 @JSON
 export class Asset {
     id: string;
+    pk: string; //Public Key (the one used to verify the signature)
+    sk: string; //Private Key (the one used to sign)
     name: string;
     total: amount;
     balance: amount;
@@ -27,6 +31,8 @@ export class Asset {
 
     constructor() {
         this.id = "";
+        this.pk = "";
+        this.sk = "";
         this.name = "";
         this.total = 0;
         this.balance = 0;
@@ -71,8 +77,14 @@ export class Asset {
         return this.total;
     }
     
-    getAddressesPaginated(before: string, after: string, limit: i32): Array<Address> {
+    getAddressesPaginated(before: string, after: string, limit: i32): Array<Address> | null {
         //Unsure what needs to be done yet.
-        return this.addresses;
+        return null;
+    }
+
+    sign(payload: string) : void {
+        let signInput = new SignInput(this.sk, payload);
+        let signature = sign(signInput);
+        emit("Payload signed successfully: " + signature);
     }
 }

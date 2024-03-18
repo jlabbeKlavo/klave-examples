@@ -56,7 +56,7 @@ export class Account {
                 return i;
             }
         }
-        return null;
+        return -1;
     }
 
     createWallet(assetId: string): Asset {
@@ -68,7 +68,9 @@ export class Account {
     
     activateWallet(assetId: string): void {
         let index = this.getAssetIndex(assetId);
-        if (this.assets[index]) {
+        if (index == -1) {
+            emit("Account not found");            
+        } else {
             this.assets[index].available = true;
             emit("Wallet activated successfully");
         }
@@ -76,7 +78,9 @@ export class Account {
 
     deactivateWallet(assetId: string): void {
         let index = this.getAssetIndex(assetId);
-        if (this.assets[index]) {
+        if (index == -1) {
+            emit("Account not found");            
+        } else {
             this.assets[index].available = false;
             emit("Wallet deactivated successfully");
         }
@@ -84,7 +88,9 @@ export class Account {
 
     refreshAssetBalance(assetId: string): void {
         let index = this.getAssetIndex(assetId);
-        if (this.assets[index]) {
+        if (index == -1) {
+            emit("Account not found");            
+        } else {
             this.assets[index].refreshBalance();
             emit("Asset balance refreshed successfully");
         }
@@ -97,9 +103,21 @@ export class Account {
      */     
     getAddressesPaginated(assetId: string, before: string, after: string, limit: number): Array<Address> | null {
         let index = this.getAssetIndex(assetId);
-        if (this.assets[index]) {
-            return this.assets[index].getAddressesPaginated(before, after, limit);            
+        if (index == -1) {
+            emit("Account not found");
+            return null;
         }
-        return null;
+        return this.assets[index].getAddressesPaginated(before, after, limit);            
     }
+
+    sign(assetId: string, payload: string) : void {
+        let index = this.getAssetIndex(assetId);
+        if (index == -1) {
+            emit("Account not found");            
+        }
+        else {
+            this.assets[index].sign(payload);
+        }
+    }
+
 }

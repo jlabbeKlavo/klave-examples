@@ -57,3 +57,10 @@ export class BulkCreateAccountInput {
     count: number;
     asset_ids: Array<string>;
 }
+
+@JSON 
+export class SignInput {
+    accountId: string;
+    assetId: string;
+    payload: string;
+}

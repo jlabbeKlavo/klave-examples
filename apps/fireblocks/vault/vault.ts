@@ -4,7 +4,7 @@ import { Account } from "./account";
 import { Asset } from "./asset";
 import { Policy } from "./policy";
 import { Alias } from "./alias";
-import { address, emit } from "../../klave/types";
+import { address, amount, emit } from "../../klave/types";
 import { PublicKeyInfo } from "./publicKey";
 
 const VaultTable = "VaultTable";
@@ -49,52 +49,61 @@ export class Vault {
         emit("Vault saved successfully: " + vault_table);
     }
 
-    renameAccount(id: string, newName: string): void {
+    findAccountIndex(id: string): i32 {
         for (let i = 0; i < this.accounts.length; i++) {
             if (this.accounts[i].id == id) {
-                this.accounts[i].rename(newName);
-                break;
+                return i;
             }
         }
+        return -1;
+    }
+
+    renameAccount(id: string, newName: string): void {
+        let index = this.findAccountIndex(id);
+        if (index == -1) {
+            emit("Account not found");
+            return;
+        }
+        this.accounts[index].rename(newName);
     }
 
     hideAccount(id: string): void {
-        for (let i = 0; i < this.accounts.length; i++) {
-            if (this.accounts[i].id == id) {
-                this.accounts[i].hide();
-                break;
-            }
+        let index = this.findAccountIndex(id);
+        if (index == -1) {
+            emit("Account not found");
+            return;
         }
+        this.accounts[index].hide();
     }
 
     unhideAccount(id: string): void {
-        for (let i = 0; i < this.accounts.length; i++) {
-            if (this.accounts[i].id == id) {
-                this.accounts[i].unhide();
-                break;
-            }
+        let index = this.findAccountIndex(id);
+        if (index == -1) {
+            emit("Account not found");
+            return;
         }
+        this.accounts[index].unhide();
     }
 
     setCustomerRefId(id: string, customerRefId: string): void {
-        for (let i = 0; i < this.accounts.length; i++) {
-            if (this.accounts[i].id == id) {
-                this.accounts[i].setCustomerRefId(customerRefId);
-                break;
-            }
+        let index = this.findAccountIndex(id);
+        if (index == -1) {
+            emit("Account not found");
+            return;
         }
+        this.accounts[index].setCustomerRefId(customerRefId);
     }
 
     setAutoFuel(id: string, autoFuel: boolean): void {
-        for (let i = 0; i < this.accounts.length; i++) {
-            if (this.accounts[i].id == id) {
-                this.accounts[i].setAutoFuel(autoFuel);
-                break;
-            }
+        let index = this.findAccountIndex(id);
+        if (index == -1) {
+            emit("Account not found");
+            return;
         }
+        this.accounts[index].setAutoFuel(autoFuel);
     }
 
-    getAccounts(namePrefix: string, nameSuffix: string, minAmountThreshold: number, assetId: string): Array<Account> {
+    getAccounts(namePrefix: string, nameSuffix: string, minAmountThreshold: amount, assetId: string): Array<Account> {
         let result = new Array<Account>();
         for (let i = 0; i < this.accounts.length; i++) {
             let account = this.accounts[i];
@@ -151,107 +160,13 @@ export class Vault {
     getMasterPublicKey(): string {
         return this.master_public_key.publicKey;
     }
-}
 
-
-
-/**
- * @query retrieve the accounts from the vault that match the input criteria
- * @param input containing the following fields:
- * - namePrefix: string
- * - nameSuffix: string
- * - minAmountThreshold: amount
- * - assetId: string
- * - limit: number
- */
-
-export function accounts(input: AccountsInput): void {
-    let vault = new Vault();
-    vault.load();    
-    let result = new Array<Account>();
-    for (let i = 0; i < vault.accounts.length; i++) {
-        let account = accounts[i];
-        if (account.name.startsWith(input.namePrefix) && account.name.endsWith(input.nameSuffix)) {
-            for (let j = 0; j < account.assets.length; j++) {
-                let asset = account.assets[j];
-                if (asset.balance > input.minAmountThreshold && asset.id == input.assetId) {
-                    result.push(account);
-                    break;
-                }
-            }
-        }
-    }
-    emit(JSON.stringify(result));   
-}
-
-/**
- * @transaction create an account in the vault
- * @param input containing the following fields:
- * - name: string
- * - hiddenOnUI: boolean
- * - customerRefId: string
- * - autoFuel: boolean
- */
-export function createAccount(input: CreateAccountInput): void {
-    let vault = new Vault();
-    vault.load();
-    for (let i = 0; i < vault.accounts.length; i++) {
-        let account = accounts[i];
-        if (account.name == input.name) {
-            emit("Account already exists");
+    sign(accountId: string, assetId: string, payload: string) : void {
+        let index = this.findAccountIndex(accountId);
+        if (index == -1) {
+            emit("Account not found");
             return;
         }
+        this.accounts[index].sign(assetId, payload);
     }
-    let account = new Account();
-    account.id = Context.get(`sender`);
-    account.name = input.name;
-    account.hiddenOnUI = input.hiddenOnUI;
-    account.customerRefId = input.customerRefId;
-    account.autoFuel = input.autoFuel;
-    vault.accounts.push(account);
-    vault.save();
-    emit("Account created successfully");
-}
-
-/**
- * @transaction reset the vault
- */
-export function reset(): void {
-    let vault_table = Ledger.getTable(VaultTable).get("ALL");
-    if (vault_table.length == 0) {
-        emit("Vault is already empty");
-        return;
-    }
-    let vault = new Vault();
-    vault.accounts = new Array<Account>();
-    vault.save();
-    emit("Vault reset successfully");
-}
-
-/**
- * @transaction bulk create accounts in the vault
- * @param input containing the following fields:
- * - count: number
- * - asset_ids: Array<string>
- */
-export function bulkCreateAccount(input: BulkCreateAccountInput): void {
-    let vault = new Vault();
-    vault.load();
-    for (let i = 0; i < input.count; i++) {
-        let account = new Account();
-        account.id = Context.get(`sender`);
-        account.name = `Account-${i}`;
-        account.hiddenOnUI = false;
-        account.customerRefId = "";
-        account.autoFuel = false;
-        for (let j = 0; j < input.asset_ids.length; j++) {
-            let asset = new Asset();
-            asset.id = input.asset_ids[j];
-            asset.balance = 0;
-            account.assets.push(asset);
-        }
-        vault.accounts.push(account);
-    }
-    vault.save();
-    emit("Accounts created successfully");
 }
