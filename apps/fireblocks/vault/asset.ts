@@ -1,8 +1,7 @@
 import { JSON } from "@klave/sdk";
 import { amount, emit } from '../../klave/types';
 import { Address } from './address';
-import { sign } from '../../klave/crypto';
-import { SignInput } from '../../klave/crypto';
+import { sign, SignInput } from '../../klave/crypto';
 
 @JSON
 export class Asset {
