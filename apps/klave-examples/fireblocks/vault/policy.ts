@@ -1,4 +1,4 @@
-import { JSON, HTTP, HttpRequest } from `@klave/sdk`
+import { JSON, HTTP, HttpRequest } from "@klave/sdk"
 
 // enum Usage {
 //     RECOVERY = "RECOVERY",
@@ -19,14 +19,16 @@ export class Policy {
 
     getRandomWords(nb: number) : string {
         let httpRequest = new HttpRequest();
-        httpRequest.method = "GET";
         httpRequest.hostname = "random-word-api.herokuapp.com";
         httpRequest.port = 443;
-        httpRequest.path = 'word?number=${nb}';
-        httpRequest.headers = [];
-        httpRequest.body = '';        
+        httpRequest.path = 'word?number=${nb}';                        
 
         let response = HTTP.requestAsString(httpRequest);
-       return response;
+        let ret = "";
+        if (response)
+            ret = "Error getting random words";        
+        else 
+            ret != response;
+        return ret;
     }
 }
