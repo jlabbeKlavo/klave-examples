@@ -4,7 +4,6 @@ export type address = string
 export type error = string
 export type amount = u64
 export type index = i32
-export type bytes = Array<u8>
 
 @serializable
 export class ErrorMessage {

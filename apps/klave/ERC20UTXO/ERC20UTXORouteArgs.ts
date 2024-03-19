@@ -1,6 +1,6 @@
 import { JSON } from "@klave/sdk"
 import { TxInput, TxOutput } from "../../token/ERC20UTXO/IERC20UTXO";
-import { address, amount, bytes } from "../../klave/types";
+import { address, amount } from "../../klave/types";
 
 @serializable
 export class TransferInput {    
@@ -19,9 +19,9 @@ export class TransferInput {
 export class MintInput {
     amount!: amount;
     output!: TxOutput; 
-    data!: bytes;
+    data!: string;
 
-    constructor(amount: amount, output: TxOutput, data: bytes) {
+    constructor(amount: amount, output: TxOutput, data: string) {
         this.amount = amount;
         this.output = new TxOutput(amount, output.owner);
         this.data = data;
@@ -32,9 +32,9 @@ export class MintInput {
 export class BurnInput {
     amount!: amount;
     output!: TxOutput;
-    data!: bytes;
+    data!: string;
     
-    constructor(amount: amount, output: TxOutput, data: bytes) {
+    constructor(amount: amount, output: TxOutput, data: string) {
         this.amount = amount;
         this.output = new TxOutput(amount, output.owner);
         this.data = data;

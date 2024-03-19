@@ -1,4 +1,4 @@
-import { JSON } from "@klave/sdk";
+import { JSON, Utils } from "@klave/sdk";
 import { amount, emit } from '../../klave/types';
 import { Address } from './address';
 import { sign, SignInput } from '../../klave/crypto';
@@ -84,6 +84,6 @@ export class Asset {
     sign(payload: string) : void {
         let signInput = new SignInput(this.sk, payload);
         let signature = sign(signInput);
-        emit("Payload signed successfully: " + signature);
+        emit(`Payload signed successfully: ${signature}`);
     }
 }

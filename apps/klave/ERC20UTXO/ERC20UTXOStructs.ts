@@ -1,5 +1,6 @@
 import {JSON} from "@klave/sdk"
 import {address, amount, index} from "../types"
+import { generateNewEncryptionKey } from "../crypto"
 
 @serializable
 export class UTXOBrief {
@@ -14,12 +15,13 @@ export class UTXOBrief {
 
 @serializable
 export class Account {
-    owner: address;
+    owner: address;    
     balance: amount;
     utxoList: Array<UTXOBrief>;
 
     constructor(owner: address, balance: amount) {
         this.owner = owner;
+        generateNewEncryptionKey(owner);
         this.balance = balance;
         this.utxoList = new Array<UTXOBrief>();
     }
