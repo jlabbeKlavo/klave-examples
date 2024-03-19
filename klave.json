@@ -8,7 +8,7 @@
             "name": "Klave-Examples",
             "slug": "ksamples",
             "version": "0.0.1",
-            "rootDir": "/apps/"
+            "rootDir": "/apps/fireblocks"
         }
     ]
 }

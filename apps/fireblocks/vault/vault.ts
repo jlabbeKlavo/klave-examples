@@ -1,5 +1,4 @@
 import { JSON, Ledger, Context } from "@klave/sdk";
-import { AccountsInput, RenameAccountInput, CreateAccountInput, HideAccountInput, UnhideAccountInput, SetCustomerRefIdInput, SetAutoFuelInput, BulkCreateAccountInput } from "./inputs/types";
 import { Account } from "./account";
 import { Asset } from "./asset";
 import { Policy } from "./policy";
@@ -18,7 +17,7 @@ export class Vault {
     accounts: Array<Account>;
     master_public_key: PublicKeyInfo;
     owner: address;
-    aliases: Array<Alias>;
+    aliases: Array<Alias>;  
     policies: Array<Policy>;
 
     constructor() {
