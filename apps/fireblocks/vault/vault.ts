@@ -7,7 +7,7 @@ import { Alias } from "./alias";
 import { address, amount, emit } from "../../klave/types";
 import { PublicKeyInfo } from "./publicKey";
 
-const VaultTable = "VaultTable"; 
+const VaultTable = "VaultTable"; // This is a table name in the ledger
 
 /**
  * Secure place where private keys are stored.
