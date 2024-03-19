@@ -142,7 +142,7 @@ export function sign(input: SignInput) : void {
  * @transaction change the passphrase for the recovery of the vault
  * 
  */
-export function changePassphrase() : void {
+export function changePassphrase(input: string) : void {
     let policy = new Policy();
     let words = policy.getRandomWords(20);
     emit(`Passphrase changed successfully to { ${words} }.`);

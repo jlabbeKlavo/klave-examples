@@ -6,9 +6,7 @@
         "@klave/sdk": "0.8.2",
         "assemblyscript": "^0.27.22",
         "tslib": "^2.6.2",
-        "visitor-as": "^0.11.4",
-        "@graphprotocol/graph-cli": "^0.69.0",
-        "@graphprotocol/graph-ts": "0.34.0"
+        "visitor-as": "^0.11.4"
     },
     "dependencies": {
         "as-base64": "^0.2.0",
