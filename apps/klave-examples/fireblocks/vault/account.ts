@@ -1,6 +1,5 @@
 import { JSON } from "@klave/sdk";
 import { Asset } from "./asset";
-import { Address } from "./address";
 import { emit } from "../../klave/types";
 
 /**

@@ -1,7 +1,7 @@
 import { JSON, Ledger, Context } from "@klave/sdk";
 import { Account } from "./account";
-// import { Policy } from "./policy";
-// import { Alias } from "./alias";
+import { Policy } from "./policy";
+import { Alias } from "./alias";
 import { address, amount, emit } from "../../klave/types";
 import { PublicKeyInfo } from "./publicKey";
 
@@ -16,15 +16,15 @@ export class Vault {
     accounts: Array<Account>;
     master_public_key: PublicKeyInfo;
     owner: address;
-    // aliases: Array<Alias>;  
-    // policies: Array<Policy>;
+    aliases: Array<Alias>;  
+    policies: Array<Policy>;
 
     constructor() {
         this.accounts = new Array<Account>();
         this.master_public_key = new PublicKeyInfo();
         this.owner = Context.get(`sender`);
-        // this.aliases = new Array<Alias>();
-        // this.policies = new Array<Policy>();
+        this.aliases = new Array<Alias>();
+        this.policies = new Array<Policy>();
     }
 
     load(): void {
@@ -37,8 +37,8 @@ export class Vault {
         this.accounts = vault.accounts;
         this.master_public_key = vault.master_public_key;
         this.owner = vault.owner;
-        // this.aliases = vault.aliases;
-        // this.policies = vault.policies;
+        this.aliases = vault.aliases;
+        this.policies = vault.policies;
         emit("Vault loaded successfully: " + vault_table);
     }
 
