@@ -1,9 +1,9 @@
 import { JSON, Ledger, Context } from "@klave/sdk";
-import { AccountsInput, RenameAccountInput, CreateAccountInput, HideAccountInput, UnhideAccountInput, SetCustomerRefIdInput, SetAutoFuelInput, BulkCreateAccountInput, SignInput } from "./inputs/types";
-import { Account } from "./account";
-import { Asset } from "./asset";
-import { Vault } from "./vault";
-import { emit } from "../../klave/types";
+import { AccountsInput, RenameAccountInput, CreateAccountInput, HideAccountInput, UnhideAccountInput, SetCustomerRefIdInput, SetAutoFuelInput, BulkCreateAccountInput, SignInput } from "./fireblocks/vault/inputs/types";
+import { Account } from "./fireblocks/vault/account";
+import { Asset } from "./fireblocks/vault/asset";
+import { Vault } from "./fireblocks/vault/vault";
+import { emit } from "./klave/types";
 
 const VaultTable = "VaultTable";
 
