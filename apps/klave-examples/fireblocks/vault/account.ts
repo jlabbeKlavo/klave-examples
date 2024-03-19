@@ -16,13 +16,13 @@ export class Account {
     customerRefId: string;
     autoFuel: boolean;
 
-    constructor() {
-        this.id = "";
+    constructor(accountId: string) {
+        this.id = accountId;
         this.name = "";
         this.assets = new Array<Asset>();
         this.hiddenOnUI = false;
         this.customerRefId = "";
-        this.autoFuel = false;
+        this.autoFuel = false;        
     }
 
     rename(newName: string): void {
@@ -60,7 +60,7 @@ export class Account {
     }
 
     createWallet(assetId: string): Asset {
-        let asset = new Asset();
+        let asset = new Asset(assetId);
         asset.id = assetId;        
         this.assets.push(asset);
         return asset;

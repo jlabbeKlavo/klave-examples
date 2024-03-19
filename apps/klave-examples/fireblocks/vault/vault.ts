@@ -1,8 +1,7 @@
 import { JSON, Ledger, Context } from "@klave/sdk";
 import { Account } from "./account";
-import { Asset } from "./asset";
-import { Policy } from "./policy";
-import { Alias } from "./alias";
+// import { Policy } from "./policy";
+// import { Alias } from "./alias";
 import { address, amount, emit } from "../../klave/types";
 import { PublicKeyInfo } from "./publicKey";
 
@@ -17,15 +16,15 @@ export class Vault {
     accounts: Array<Account>;
     master_public_key: PublicKeyInfo;
     owner: address;
-    aliases: Array<Alias>;  
-    policies: Array<Policy>;
+    // aliases: Array<Alias>;  
+    // policies: Array<Policy>;
 
     constructor() {
         this.accounts = new Array<Account>();
         this.master_public_key = new PublicKeyInfo();
         this.owner = Context.get(`sender`);
-        this.aliases = new Array<Alias>();
-        this.policies = new Array<Policy>();
+        // this.aliases = new Array<Alias>();
+        // this.policies = new Array<Policy>();
     }
 
     load(): void {
@@ -38,7 +37,8 @@ export class Vault {
         this.accounts = vault.accounts;
         this.master_public_key = vault.master_public_key;
         this.owner = vault.owner;
-        this.aliases = vault.aliases;
+        // this.aliases = vault.aliases;
+        // this.policies = vault.policies;
         emit("Vault loaded successfully: " + vault_table);
     }
 
@@ -127,8 +127,7 @@ export class Vault {
                 return;
             }
         }
-        let account = new Account();
-        account.id = Context.get(`sender`);
+        let account = new Account(Context.get(`sender`));        
         account.name = name;
         account.hiddenOnUI = hiddenOnUI;
         account.customerRefId = customerRefId;
@@ -139,19 +138,10 @@ export class Vault {
 
     bulkCreateAccounts(count: number, asset_ids: Array<string>): void {
         for (let i = 0; i < count; i++) {
-            let account = new Account();
-            account.id = Context.get(`sender`);
-            account.name = `Account-${i}`;
-            account.hiddenOnUI = false;
-            account.customerRefId = "";
-            account.autoFuel = false;
-            for (let j = 0; j < asset_ids.length; j++) {
-                let asset = new Asset();
-                asset.id = asset_ids[j];
-                asset.balance = 0;
-                account.assets.push(asset);
-            }
+            let account = new Account(`Account-${i}`);
+            account.createWallet(asset_ids[i]);
             this.accounts.push(account);
+
         }
         emit("Accounts created successfully");
     }

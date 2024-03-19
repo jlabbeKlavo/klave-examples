@@ -28,8 +28,8 @@ export class Asset {
 
     addresses: Array<Address>;
 
-    constructor() {
-        this.id = "";
+    constructor(assetId: string) {
+        this.id = assetId;
         this.pk = "";
         this.sk = "";
         this.name = "";
