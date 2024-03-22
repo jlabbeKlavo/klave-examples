@@ -126,25 +126,52 @@ export class Wallet {
      * Remove a user from the wallet.
      * @param userId The id of the user to remove.
      */
-    removeUser(userId: string): boolean {
+    removeUser(userId: string, removeFromUser: boolean): boolean {
         if (!this.senderIsAdmin())
         {
             revert("You are not allowed to remove a user");
             return false;
         }
 
-        let user = User.load(userId);
-        if (!user) {
-            revert("User not found: " + userId);
-            return false;
+        if (removeFromUser) {
+            let user = User.load(userId);
+            if (!user) {
+                revert("User not found: " + userId);
+                return false;
+            }
+            user.removeWallet(this.id);
+            user.save();
         }
-        user.removeWallet(this.id);
-        user.save();
-
+        
         let index = this.users.indexOf(userId);
         this.users.splice(index, 1);
         emit("User removed successfully: " + userId);
         return true;
+    }
+
+    /**
+     * List all the users in the wallet.
+     */
+    listUsers(): string {
+        if (!this.senderIsRegistered())
+        {
+            revert("You are not allowed to list the users in the wallet");
+            return "";
+        }
+
+        let users: string = "";
+        for (let i = 0; i < this.users.length; i++) {
+            let user = User.load(this.users[i]);
+            if (!user) {
+                revert(`User ${this.users[i]} does not exist`);
+                continue;
+            }
+            if (users.length > 0) {
+                users += ", ";
+            }
+            users += JSON.stringify<User>(user);
+        }
+        return users;
     }
 
     /**

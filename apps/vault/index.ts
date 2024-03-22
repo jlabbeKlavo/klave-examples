@@ -1,4 +1,4 @@
-import { RenameWalletInput, CreateWalletInput, SignInput, VerifyInput, AddUserInput, AddKeyInput, ListKeysInput, ResetInput, RemoveKeyInput, RemoveUserInput, CreateVaultInput} from "./vault/inputs/types";
+import { RenameWalletInput, CreateWalletInput, SignInput, VerifyInput, AddUserInput, AddKeyInput, ListKeysInput, ResetInput, RemoveKeyInput, RemoveUserInput, CreateVaultInput, ListWalletsInput, ListUsersInput, AddUserToWalletInput, RemoveUserFromWalletInput} from "./vault/inputs/types";
 import { Vault } from "./vault/vault";
 import { emit, revert } from "./klave/types";
 
@@ -47,6 +47,34 @@ export function listKeys(input: ListKeysInput): void {
         return;
     }
     vault.listKeys(input.walletId, input.user);
+}
+
+/**
+ * @query list all wallets
+ * @param input containing the following fields:
+ * - user: string, the user to list the wallets for (optional)
+ * @returns the list of wallets
+ */
+export function listWallets(input: ListWalletsInput) : void {
+    let vault = Vault.load();
+    if (!vault) {
+        return;
+    }
+    vault.listWallets(input.user);
+}
+
+/**
+ * @query list all users
+ * @param input containing the following fields:
+ * - user: string, the user to list the users for (optional)
+ * @returns the list of users
+ */
+export function listUsers(input: ListUsersInput): void {
+    let vault = Vault.load();
+    if (!vault) {
+        return;
+    }
+    vault.listUsers(input.user);
 }
 
 /**
@@ -131,34 +159,67 @@ export function decrypt(input: SignInput): void {
 }
 
 /**
- * @transaction add a user to the wallet
+ * @transaction add a user to the vault
  * @param input containing the following fields:
  * - userId: string
  * - role: string, "admin" or "user"
  * @returns success boolean
  */
-export function addUser(input: AddUserInput): void {
+export function createUser(input: AddUserInput): void {
     let vault = Vault.load();
     if (!vault) {
         return;
     }
-    if (vault.addUser(input.userId, input.role, false)) {
+    if (vault.createUser(input.userId, input.role, false)) {
         vault.save();
     }
 }
 
 /**
- * @transaction remove a user from the wallet
+ * @transaction remove a user from the vault
  * @param input containing the following fields:
  * - userId: string
  * @returns success boolean
  */
-export function removeUser(input: RemoveUserInput): void {
+export function deleteUser(input: RemoveUserInput): void {
     let vault = Vault.load();
     if (!vault) {
         return;
     }
-    if (vault.removeUser(input.userId)) {
+    if (vault.deleteUser(input.userId)) {
+        vault.save();
+    }
+}
+
+/**
+ * @transaction add a user to a wallet
+ * @param input containing the following fields:
+ * - walletId: string
+ * - userId: string
+ * - role: string, "admin" or "user"
+ */
+export function addUserToWallet(input: AddUserToWalletInput): void {
+    let vault = Vault.load();
+    if (!vault) {
+        return;
+    }
+    if (vault.addUserToWallet(input.walletId, input.userId, input.role)) {
+        vault.save();
+    }
+}
+
+/**
+ * @transaction delete a user from a wallet
+ * @param input containing the following fields:
+ * - userId: string
+ * @returns success boolean
+ */
+export function removeUserFromWallet(input: RemoveUserFromWalletInput): void {
+    let vault = Vault.load();
+    if (!vault) {
+        return;
+    }
+    if (vault.removeUserFromWallet(input.walletId, input.userId)) {
         vault.save();
     }
 }

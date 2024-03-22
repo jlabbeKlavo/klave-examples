@@ -69,7 +69,7 @@ export class Vault {
      */
     create(name: string): void {
         this.name = name;
-        this.addUser(Context.get('sender'), "admin", true);
+        this.createUser(Context.get('sender'), "admin", true);
         emit("Vault created successfully: " + this.name);        
         return;
     }
@@ -79,7 +79,7 @@ export class Vault {
      * @param userId The id of the user to add.
      * @param role The role of the user to add.
      */
-    addUser(userId: string, role: string, force: boolean): boolean {
+    createUser(userId: string, role: string, force: boolean): boolean {
         if (!force && !this.senderIsAdmin())
         {
             revert("You are not allowed to add a user");
@@ -103,13 +103,13 @@ export class Vault {
      * Remove a user from the wallet.
      * @param userId The id of the user to remove.
      */
-    removeUser(userId: string): boolean {
+    deleteUser(userId: string): boolean {
         if (!this.senderIsAdmin())
         {
             revert("You are not allowed to remove a user");
             return false;
         }
-
+        
         let user = User.load(userId);
         if (!user) {
             revert("User not found: " + userId);
@@ -232,6 +232,48 @@ export class Vault {
     }
 
     /**
+     * list all the users in the wallet.
+     */
+    listUsers(user: string): void {
+        let users: string = "";
+        if (this.senderIsAdmin())
+        {
+            for (let i = 0; i < this.users.length; i++) {
+                let userId = this.users[i];
+                let userObj = User.load(userId);
+                if (!userObj) {
+                    revert(`User ${userId} does not exist`);
+                    continue;
+                }
+                if (users.length > 0) {
+                    users += ", ";
+                }
+                if (user.length == 0 || userObj.id.includes(user)) {
+                    users += JSON.stringify<User>(userObj);
+                }
+            }
+        }
+        else {
+            //return the users within the wallets the specified user is part of
+            for (let i = 0; i < this.wallets.length; i++) {
+                let walletId = this.wallets[i];
+                let wallet = Wallet.load(walletId);
+                if (!wallet) {
+                    continue;
+                }
+                if (users.length > 0) {
+                    users += ", ";
+                }
+                users += wallet.listUsers();
+            }
+        }
+        if (users.length == 0) {
+            emit(`No users found in the wallet`);
+        }
+        emit(`Users in the wallet: ${users}`);                
+    }
+
+    /**
      * Create a key with the given description and type.
      * @param description The description of the key.
      * @param type The type of the key.
@@ -267,7 +309,7 @@ export class Vault {
         if (!wallet) {
             return false;
         }
-        wallet.removeUser(userId);
+        wallet.removeUser(userId, true);
         return true;
     }
 

@@ -1,12 +1,19 @@
 import { Ledger, JSON } from "@klave/sdk";
 import { emit, index, revert } from "../klave/types"
+import { Wallet } from "./wallet";
 
 const UsersTable = "UsersTable";
 
+/**
+ * Roles of the user in the wallet
+ * - admin: can manage the wallet and its users
+ * - internal user: can sign and verify transactions
+ * - external user: can only sign transactions
+ **/ 
 @JSON
 export class WalletUser {
     walletId: string;
-    role: string;   // admin, user, etc.
+    role: string;   
 
     constructor() {
         this.walletId = "";
@@ -14,6 +21,11 @@ export class WalletUser {
     }
 }
 
+/**
+ * Roles of the user in the vault
+ * - admin: can manage the vault and its wallets
+ * - user: can access one or more wallets
+ */
 @JSON
 export class User {
     id: string;
@@ -62,8 +74,18 @@ export class User {
     }
 
     delete(): void {
+        for (let i = 0; i < this.wallets.length; i++) {
+            let walletUser = this.wallets[i];
+            let wallet = Wallet.load(walletUser.walletId);
+            if (wallet) {
+                wallet.removeUser(this.id, false);
+                wallet.save();
+            }
+        }
+
         this.id = "";
         this.role = "";
+        this.wallets = new Array<WalletUser>();
         Ledger.getTable(UsersTable).unset(this.id);
         emit(`User deleted successfully: '${this.id}'`);
     }

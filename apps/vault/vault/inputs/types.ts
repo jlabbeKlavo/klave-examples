@@ -33,7 +33,7 @@ export class VerifyInput {
 }
 
 @JSON 
-export class AddUserInput {
+export class AddUserInput {    
     userId: string;
     role: string;
 }
@@ -41,6 +41,19 @@ export class AddUserInput {
 @JSON 
 export class RemoveUserInput {
     userId: string;    
+}
+
+@JSON 
+export class AddUserToWalletInput {    
+    walletId: string;    
+    userId: string;
+    role: string;
+}
+
+@JSON
+export class RemoveUserFromWalletInput {
+    walletId: string;
+    userId: string;
 }
 
 @JSON 
@@ -63,6 +76,7 @@ export class ListUsersInput {
 
 @JSON
 export class ListWalletsInput {    
+    user: string;
 }
 
 @JSON
