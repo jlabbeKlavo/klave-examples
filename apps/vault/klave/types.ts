@@ -5,7 +5,7 @@ export type error = string
 export type amount = u64
 export type index = i32
 
-@serializable
+@JSON
 export class ErrorMessage {
     success!: boolean;
     message!: string;

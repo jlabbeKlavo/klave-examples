@@ -5,10 +5,10 @@
     ],
     "applications": [
         {
-            "name": "Klave-Examples",
-            "slug": "ksamples",
+            "name": "Vault",
+            "slug": "kvault",
             "version": "0.0.1",
-            "rootDir": "/apps/klave-examples"
+            "rootDir": "/apps/vault"
         }
     ]
 }
