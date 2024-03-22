@@ -23,7 +23,7 @@ export class Key {
     static load(keyId: string) : Key | null {        
         let keyTable = Ledger.getTable(KeysTable).get(keyId);
         if (keyTable.length == 0) {
-            revert("Key does not exists. Create it first");
+            revert("Key does not exist. Create it first");
             return null;
         }
         let key = JSON.parse<Key>(keyTable);        

@@ -27,7 +27,7 @@ export class Vault {
     static load(): Vault | null {
         let vaultTable = Ledger.getTable(VaultTable).get("ALL");
         if (vaultTable.length == 0) {
-            revert("Vault does not exists. Create it first");
+            revert("Vault does not exist. Create it first");
             return null;
         }
         let wlt = JSON.parse<Vault>(vaultTable);
@@ -164,6 +164,7 @@ export class Vault {
         }
         wallet = new Wallet();
         wallet.create(walletName);
+        wallet.save();
         this.wallets.push(wallet.id);
         emit("Wallet created successfully: " + wallet.id);
     }
@@ -311,6 +312,7 @@ export class Vault {
             return false;
         }
         wallet.addUser(userId, role, false);
+        wallet.save();
         return true;
     }
 
@@ -331,6 +333,7 @@ export class Vault {
             return false;
         }
         wallet.removeUser(userId, true);
+        wallet.save();
         return true;
     }
 
@@ -352,6 +355,7 @@ export class Vault {
             return false;
         }
         wallet.createKey(description, type);
+        wallet.save();
         return true;
     }
 

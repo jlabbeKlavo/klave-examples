@@ -42,7 +42,7 @@ export class User {
     static load(userId: string) : User | null {
         let userTable = Ledger.getTable(UsersTable).get(userId);
         if (userTable.length == 0) {
-            revert(`User ${userId} does not exists. Create it first`);
+            revert(`User ${userId} does not exist. Create it first`);
             return null;
         }
         let user = JSON.parse<User>(userTable);        
@@ -53,7 +53,7 @@ export class User {
     static loadWallet(userId: string, walletId: string) : WalletUser | null {
         let userTable = Ledger.getTable(UsersTable).get(userId);
         if (userTable.length == 0) {
-            revert(`User ${userId} does not exists. Create it first`);
+            revert(`User ${userId} does not exist. Create it first`);
             return null;
         }
         let user = JSON.parse<User>(userTable);        

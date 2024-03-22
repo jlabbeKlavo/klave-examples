@@ -33,7 +33,7 @@ export class Wallet {
     static load(walletId: string): Wallet | null {
         let walletTable = Ledger.getTable(WalletTable).get(walletId);
         if (walletTable.length == 0) {
-            revert("Wallet does not exists. Create it first");
+            revert("Wallet does not exist. Create it first");
             return null;
         }
         let wlt = JSON.parse<Wallet>(walletTable);
