@@ -324,7 +324,7 @@ export class Wallet {
      * @param description The description of the key.
      * @param type The type of the key.
      */
-    addKey(description: string, type: string): boolean {
+    createKey(description: string, type: string): boolean {
         if (!this.senderIsRegistered())
         {
             revert("You are not allowed to add a key/access this wallet");
@@ -342,7 +342,7 @@ export class Wallet {
      * Remove a key from the wallet.
      * @param keyId The id of the key to remove.
      */
-    removeKey(keyId: string): boolean {
+    deleteKey(keyId: string): boolean {
         if (!this.senderIsRegistered())
         {
             revert("You are not allowed to remove a key/access this wallet");

@@ -169,6 +169,27 @@ export class Vault {
     }
 
     /**
+     * delete a wallet with the given id.
+     */
+    deleteWallet(walletId: string): void {
+        if (!this.senderIsAdmin())
+        {
+            revert("You are not allowed to delete a wallet");
+            return;
+        }
+
+        let wallet = Wallet.load(walletId);
+        if (!wallet) {
+            revert(`Wallet ${walletId} does not exist`);
+            return;
+        }
+        wallet.delete();
+        let index = this.wallets.indexOf(walletId);
+        this.wallets.splice(index, 1);
+        emit("Wallet deleted successfully: " + walletId);
+    }
+
+    /**
      * list all the keys in the wallet.
      * @returns 
      */
@@ -330,7 +351,7 @@ export class Vault {
         if (!wallet) {
             return false;
         }
-        wallet.addKey(description, type);
+        wallet.createKey(description, type);
         return true;
     }
 
@@ -338,7 +359,7 @@ export class Vault {
      * Remove a key from the wallet.
      * @param keyId The id of the key to remove.
      */
-    removeKey(walletId: string, keyId: string): boolean {
+    deleteKey(walletId: string, keyId: string): boolean {
         if (!this.senderIsRegistered())
         {
             revert("You are not allowed to remove a key/access this wallet");
@@ -348,7 +369,7 @@ export class Vault {
         if (!wallet) {
             return false;
         }
-        wallet.removeKey(keyId);
+        wallet.deleteKey(keyId);
         wallet.save();
         return true;
     }

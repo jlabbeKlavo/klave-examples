@@ -1,4 +1,4 @@
-import { RenameWalletInput, CreateWalletInput, SignInput, VerifyInput, AddUserInput, AddKeyInput, ListKeysInput, ResetInput, RemoveKeyInput, RemoveUserInput, CreateVaultInput, ListWalletsInput, ListUsersInput, AddUserToWalletInput, RemoveUserFromWalletInput} from "./vault/inputs/types";
+import { RenameWalletInput, CreateWalletInput, SignInput, VerifyInput, AddUserInput, AddKeyInput, ListKeysInput, ResetInput, RemoveKeyInput, RemoveUserInput, CreateVaultInput, ListWalletsInput, ListUsersInput, AddUserToWalletInput, RemoveUserFromWalletInput, DeleteWalletInput} from "./vault/inputs/types";
 import { Vault } from "./vault/vault";
 import { emit, revert } from "./klave/types";
 
@@ -25,12 +25,12 @@ export function createKey(input: AddKeyInput): void {
  * - keyId: string
  * @returns success boolean
  */
-export function removeKey(input: RemoveKeyInput): void {
+export function deleteKey(input: RemoveKeyInput): void {
     let vault = Vault.load();
     if (!vault) {
         return;
     }
-    if (vault.removeKey(input.walletId, input.keyId)) {
+    if (vault.deleteKey(input.walletId, input.keyId)) {
         vault.save();
     }
 }
@@ -236,6 +236,21 @@ export function createWallet(input: CreateWalletInput): void {
         return;
     }    
     vault.createWallet(input.name);
+    vault.save();
+}
+
+/**
+ * @transaction delete the wallet
+ * @param input containing the following fields:
+ * - name: string
+ * @returns success boolean
+ */
+export function deleteWallet(input: DeleteWalletInput): void {
+    let vault = Vault.load();
+    if (!vault) {        
+        return;
+    }    
+    vault.deleteWallet(input.walletId);
     vault.save();
 }
 

@@ -17,6 +17,11 @@ export class CreateWalletInput {
     name: string;
 }
 
+@JSON
+export class DeleteWalletInput {
+    walletId: string;
+}
+
 @JSON 
 export class SignInput {
     walletId: string;
