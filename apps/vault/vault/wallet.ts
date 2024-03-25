@@ -174,13 +174,15 @@ export class Wallet {
     senderIsAdmin(): boolean {
         let user = VaultUser.load(Context.get('sender'));
         if (!user) {
+            revert(`Cannot find the user ${Context.get('sender')}`);
             return false;
         }
         let index = user.findWalletIndex(this.id);
         if (index == -1) {
+            revert(`Wallet not registered for user ${user.id}`)
             return false;
         }
-
+        emit(`User ${user.id} is registered for wallet ${this.id} with role ${user.role}`);
         return user.role == "admin";
     }
 
@@ -191,12 +193,15 @@ export class Wallet {
     senderIsInternalUser(): boolean {
         let user = VaultUser.load(Context.get('sender'));
         if (!user) {
+            revert(`Cannot find the user ${Context.get('sender')}`);
             return false;
         }
         let index = user.findWalletIndex(this.id);
         if (index == -1) {
+            revert(`Wallet not registered for user ${user.id}`)
             return false;
         }
+        emit(`User ${user.id} is registered for wallet ${this.id} with role ${user.role}`);
         return (user.role == "admin" || user.role == "internalUser");
     }
 
@@ -207,8 +212,10 @@ export class Wallet {
     senderIsExternalUser(): boolean {
         let user = VaultUser.load(Context.get('sender'));
         if (!user) {
+            revert(`Cannot find the user ${Context.get('sender')}`);
             return false;
         }
+        emit(`User ${user.id} is registered for wallet ${this.id} with role ${user.role}`);
         return true;
     }
 
