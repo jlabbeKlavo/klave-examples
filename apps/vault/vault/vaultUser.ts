@@ -1,4 +1,4 @@
-import { Ledger, JSON, Crypto } from "@klave/sdk";
+import { Ledger, JSON, Crypto, Context } from "@klave/sdk";
 import { emit, index, revert } from "../klave/types"
 import { Wallet } from "./wallet";
 import { ChainedItems } from "../klave/chained";
@@ -54,7 +54,7 @@ export class VaultUser {
 
     static create(role: string): VaultUser {
         let user = new VaultUser();
-        user.id = b64encode(convertToUint8Array(Crypto.getRandomValues(64)));
+        user.id = Context.get('sender');
         user.role = role;
         user.save();
         emit(`User created successfully: '${user.id}'`);

@@ -266,7 +266,5 @@ export function createVault(input: CreateVaultInput): void {
         revert(`Wallet does already exists.`);        
         return;
     }
-    let vault = new Vault();
-    vault.create(input.name);
-    vault.save();
+    Vault.create(input.name);
 }

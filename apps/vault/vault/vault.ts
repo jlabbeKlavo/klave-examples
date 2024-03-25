@@ -31,9 +31,9 @@ export class Vault {
             revert("Vault does not exist. Create it first");
             return null;
         }
-        let wlt = JSON.parse<Vault>(vaultTable);
+        let vault = JSON.parse<Vault>(vaultTable);
         emit("Vault loaded successfully: " + vaultTable);
-        return wlt;
+        return vault;
     }
  
     /**
@@ -68,10 +68,17 @@ export class Vault {
      * Also adds the sender as an admin user.
      * @param name 
      */
-    create(name: string): void {
-        this.name = name;
-        this.createProfile(Context.get('sender'), "admin", true);
-        emit("Vault created successfully: " + this.name);        
+    static create(name: string): void {
+        let vault = Vault.load();
+        if (vault) {
+            revert("Vault already exists");
+            return;
+        }
+        vault = new Vault();
+        vault.name = name;
+        vault.createProfile(Context.get('sender'), "admin", true);
+        vault.save();
+        emit("Vault created successfully: " + vault.name);        
         return;
     }
     
@@ -97,7 +104,7 @@ export class Vault {
         }
         let user = VaultUser.create(role);
         this.users.add<string>(user.id);        
-        emit("User added successfully: " + userId);
+        emit("User added successfully: " + user.id);
         return true;
     }
 
