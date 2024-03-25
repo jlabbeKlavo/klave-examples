@@ -3,6 +3,7 @@ import { emit, revert } from "../klave/types"
 import { SignInput, VerifyInput, sign, verify } from "../klave/crypto";
 import { encode as b64encode, decode as b64decode } from 'as-base64/assembly';
 import { convertToUint8Array, convertToU8Array } from "../klave/helpers";
+import { ChainedItems } from '../klave/chained';
 
 const KeysTable = "KeysTable";
 
@@ -37,40 +38,59 @@ export class Key {
         emit(`User saved successfully: '${this.id}'`);        
     }
 
-    create(description: string, type: string): boolean {
-        this.id = b64encode(convertToUint8Array(Crypto.getRandomValues(64)));
-        this.description = description;
-        this.type = type;
-        this.owner = Context.get('sender');
-        if (this.type == "ECDSA") {
-            const key = Crypto.ECDSA.generateKey(this.id);
-            if (key) {
-                emit(`SUCCESS: Key '${this.id}' has been generated`);
+    static create(description: string, type: string): boolean {
+        let key = new Key("");
+        key.id = b64encode(convertToUint8Array(Crypto.getRandomValues(64)));
+        key.description = description;
+        key.type = type;
+        key.owner = Context.get('sender');
+        if (key.type == "ECDSA") {
+            const keyECDSA = Crypto.ECDSA.generateKey(key.id);
+            if (keyECDSA) {
+                emit(`SUCCESS: Key '${key.id}' has been generated`);
                 return true;
             } else {
-                revert(`ERROR: Key '${this.id}' has not been generated`);
+                revert(`ERROR: Key '${key.id}' has not been generated`);
                 return false;
             }
         }
-        else if (this.type == "AES") {
-            const key = Crypto.AES.generateKey(this.id);
-            if (key) {
-                emit(`SUCCESS: Key '${this.id}' has been generated`);
+        else if (key.type == "AES") {
+            const keyAES = Crypto.AES.generateKey(key.id);
+            if (keyAES) {
+                emit(`SUCCESS: Key '${key.id}' has been generated`);
                 return true;
             } else {
-                revert(`ERROR: Key '${this.id}' has not been generated`);
+                revert(`ERROR: Key '${key.id}' has not been generated`);
                 return false;
             }
         }
         else {
-            revert(`ERROR: Key type '${this.type}' is not supported`);
+            revert(`ERROR: Key type '${key.type}' is not supported`);
             return false;
         }
     }
 
-    delete(): void {
-        Ledger.getTable(KeysTable).unset(this.id);
-        emit(`Key deleted successfully: '${this.id}'`);
+    static delete(keyId: string): void {
+        let key = Key.load(keyId);
+        if (!key) {
+            return;
+        }        
+        key.reset();
+        Ledger.getTable(KeysTable).unset(keyId);
+        emit(`Key deleted successfully: '${keyId}'`);
+    }
+
+    reset(): void {
+        if (this.type == "ECDSA") {
+            // Crypto.ECDSA.deleteKey(this.id);
+        }
+        else if (this.type == "AES") {
+            // Crypto.AES.deleteKey(this.id);
+        }
+        this.id = "";
+        this.description = "";
+        this.type = "";
+        this.owner = "";
     }
 
     sign(message: string): string | null {
@@ -114,4 +134,33 @@ export class Key {
         }        
         return KeyAES.decrypt(convertToU8Array(b64decode(cypher)));
     }
+}
+
+export class ChainedKeys extends ChainedItems<Key> {
+    constructor() {
+        super();
+    }    
+
+    includes(id: string): boolean {
+        let all = this.getAll();
+        for (let i = 0; i < all.length; i++) {            
+            let item = all[i];
+            if (item.id == id) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    remove(keyId: string): void {
+        let all = this.getAll();
+        for (let i = 0; i < all.length; i++) {
+            let item = all[i];
+            if (item.id == keyId) {
+                this.removeIndex(i);
+                break;
+            }
+        }
+    }
+
 }

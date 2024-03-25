@@ -1,11 +1,10 @@
 import { Ledger, JSON, Context, Crypto } from "@klave/sdk";
 import { emit, revert } from "../klave/types";
-import { Key } from "./key";
-import { User } from "./user";
+import { ChainedKeys, Key } from "./key";
+import { ChainedVaultUsers, VaultUser } from "./vaultUser";
 import { encode as b64encode } from 'as-base64/assembly';
 import { convertToUint8Array } from "../klave/helpers";
-
-
+import { ChainedItems } from "../klave/chained";
 
 const WalletTable = "WalletTable";
 
@@ -16,14 +15,14 @@ const WalletTable = "WalletTable";
 export class Wallet {    
     id: string;
     name: string;
-    keys: Array<string>;
-    users: Array<string>;
+    keys: ChainedKeys;
+    users: ChainedVaultUsers;
 
     constructor() {
         this.id = "";
         this.name = "";
-        this.keys = new Array<string>();
-        this.users = new Array<string>();
+        this.keys = new ChainedKeys();
+        this.users = new ChainedVaultUsers();
     }
     
     /**
@@ -55,12 +54,14 @@ export class Wallet {
      * Also adds the sender as an admin user.
      * @param name 
      */
-    create(name: string): void {
-        this.id = b64encode(convertToUint8Array(Crypto.getRandomValues(64)));
-        this.name = name;
-        this.addUser(Context.get('sender'), "admin", true);
-        emit("Wallet created successfully: " + this.name);        
-        return;
+    static create(name: string): Wallet {
+        let wallet = new Wallet();
+        wallet.id = b64encode(convertToUint8Array(Crypto.getRandomValues(64)));
+        wallet.name = name;
+        wallet.addUser(Context.get('sender'), "admin", true);
+        wallet.save();
+        emit("Wallet created successfully: " + wallet.name);
+        return wallet;
     }
     
     /**
@@ -84,17 +85,15 @@ export class Wallet {
     /**
      * delete the wallet.     
      */
-    delete(): void {
-        if (!this.senderIsAdmin())
-        {
-            revert("You are not allowed to delete the wallet");
+    static delete(walletId: string): void {
+        let wallet = Wallet.load(walletId);
+        if (!wallet) {
             return;
-        }
-        this.name = "";
-        this.keys = new Array<string>();
-        this.users = new Array<string>();
-        Ledger.getTable(WalletTable).unset(this.id);
-        emit("Wallet deleted successfully");
+        }        
+        wallet.keys.reset();
+        wallet.users.reset();
+        Ledger.getTable(WalletTable).unset(walletId);
+        emit(`Wallet deleted successfully: '${walletId}'`);
     }
 
     
@@ -110,14 +109,15 @@ export class Wallet {
             return false;
         }
 
-        let existingUser = User.load(userId);
+        let existingUser = VaultUser.load(userId);
         if (!existingUser) {
             revert(`User ${userId} does not have a profile yet. Create it.`);
             return false;
         }
         existingUser.addWallet(this.id, role);
         existingUser.save();
-        this.users.push(userId);
+
+        this.users.add<string>(userId);
         emit("User added successfully: " + userId);
         return true;
     }
@@ -134,7 +134,7 @@ export class Wallet {
         }
 
         if (removeFromUser) {
-            let user = User.load(userId);
+            let user = VaultUser.load(userId);
             if (!user) {
                 revert("User not found: " + userId);
                 return false;
@@ -143,8 +143,8 @@ export class Wallet {
             user.save();
         }
         
-        let index = this.users.indexOf(userId);
-        this.users.splice(index, 1);
+        this.users.remove(userId);
+
         emit("User removed successfully: " + userId);
         return true;
     }
@@ -153,24 +153,17 @@ export class Wallet {
      * List all the users in the wallet.
      */
     listUsers(): string {
-        if (!this.senderIsRegistered())
+        if (!this.senderIsAdmin())
         {
             revert("You are not allowed to list the users in the wallet");
             return "";
         }
 
-        let users: string = "";
-        for (let i = 0; i < this.users.length; i++) {
-            let user = User.load(this.users[i]);
-            if (!user) {
-                revert(`User ${this.users[i]} does not exist`);
-                continue;
-            }
-            if (users.length > 0) {
-                users += ", ";
-            }
-            users += JSON.stringify<User>(user);
+        let users = this.users.getAllAsString();
+        if (users.length == 0) {
+            emit(`No users found in the wallet`);
         }
+        emit(`Users in the wallet: ${users}`);
         return users;
     }
 
@@ -179,19 +172,40 @@ export class Wallet {
      * @returns True if the sender is an admin, false otherwise.
      */
     senderIsAdmin(): boolean {
-        let user = User.loadWallet(Context.get('sender'), this.id);
+        let user = VaultUser.load(Context.get('sender'));
         if (!user) {
             return false;
         }
+        let index = user.findWalletIndex(this.id);
+        if (index == -1) {
+            return false;
+        }
+
         return user.role == "admin";
+    }
+
+    /**
+     * Check if the sender is an admin.
+     * @returns True if the sender is an admin, false otherwise.
+     */
+    senderIsInternalUser(): boolean {
+        let user = VaultUser.load(Context.get('sender'));
+        if (!user) {
+            return false;
+        }
+        let index = user.findWalletIndex(this.id);
+        if (index == -1) {
+            return false;
+        }
+        return (user.role == "admin" || user.role == "internalUser");
     }
 
     /**
      * Check if the sender is registered.
      * @returns True if the sender is registered, false otherwise.
      */
-    senderIsRegistered(): boolean {
-        let user = User.loadWallet(Context.get('sender'), this.id);
+    senderIsExternalUser(): boolean {
+        let user = VaultUser.load(Context.get('sender'));
         if (!user) {
             return false;
         }
@@ -203,7 +217,7 @@ export class Wallet {
      * @returns True if the user is an admin, false otherwise.
      */
     userIsAdmin(userId: string): boolean {
-        let user = User.loadWallet(userId, this.id);
+        let user = VaultUser.load(userId);
         if (!user) {
             return false;
         }
@@ -215,7 +229,7 @@ export class Wallet {
      * @returns True if the user is registered, false otherwise.
      */
     userIsRegistered(userId: string): boolean {
-        let user = User.loadWallet(userId, this.id);
+        let user = VaultUser.load(userId);
         if (!user) {
             return false;
         }
@@ -226,32 +240,19 @@ export class Wallet {
      * list all the keys in the wallet.
      * @returns 
      */
-    listKeys(user: string): void {
-        if (!this.senderIsRegistered())
+    listKeys(user: string): string {
+        if (!this.senderIsInternalUser())
         {
             revert("You are not allowed to list the keys in the wallet");
-            return;
+            return "";
         }        
 
-        let keys: string = "";
-        for (let i = 0; i < this.keys.length; i++) {
-            let key = this.keys[i];
-            let keyObj = Key.load(key);
-            if (!keyObj) {
-                revert(`Key ${key} does not exist`);
-                continue;
-            }            
-            if (keys.length > 0) {
-                keys += ", ";
-            }
-            if (user.length == 0 || keyObj.owner == user) {
-                keys += JSON.stringify<Key>(keyObj);
-            }
-        }
+        let keys = this.keys.getAllAsString();
         if (keys.length == 0) {
             emit(`No keys found in the wallet`);
         }
-        emit(`Keys in the wallet: ${keys}`);
+        emit(`Keys in the wallet: ${keys}`);       
+        return keys; 
     }
 
     /**
@@ -267,19 +268,24 @@ export class Wallet {
 
         if (keys.length == 0) {
             this.name = "";        
-            this.keys = new Array<string>();
-            this.users = new Array<string>();
+            this.keys.reset();
+            this.users.reset();
             emit("Wallet reset successfully");
          } else {
-            for (let i = 0; i < keys.length; i++) {
-                let key = new Key(keys[i]);                
-                key.delete();
-                let index = this.keys.indexOf(keys[i]);
-                this.keys.splice(index, 1);
+            let allKeys = this.keys.getAll();    
+            // for each key in the list, remove it from the wallet
+            for (let j = 0; j < keys.length; j++) {
+                for (let i = 0; i < allKeys.length; i++) {
+                    let key = allKeys[i];
+                    if (key.id == keys[j]) {
+                        Key.delete(key.id);
+                        this.keys.removeIndex(i);
+                        break;
+                    }
+                }
             }
             emit("Keys removed successfully");
         }
-
     }
 
     /**
@@ -288,7 +294,7 @@ export class Wallet {
      * @param payload The message to sign.
      */
     sign(keyId: string, payload: string): string | null {
-        if (!this.senderIsRegistered())
+        if (!this.senderIsExternalUser())
         {
             revert("You are not allowed to sign a message/access this wallet");
             return null;
@@ -307,7 +313,7 @@ export class Wallet {
      * @param signature The signature to verify.
      */
     verify(keyId: string, payload: string, signature: string): boolean {
-        if (!this.senderIsRegistered())
+        if (!this.senderIsExternalUser())
         {
             revert("You are not allowed to verify a signature/access this wallet");
             return false;
@@ -325,16 +331,13 @@ export class Wallet {
      * @param type The type of the key.
      */
     createKey(description: string, type: string): boolean {
-        if (!this.senderIsRegistered())
+        if (!this.senderIsInternalUser())
         {
             revert("You are not allowed to add a key/access this wallet");
             return false;
         }
-        let key = new Key("");
-        key.create(description, type);
-        key.save();
-
-        this.keys.push(key.id);
+        let key = Key.create(description, type);        
+        this.keys.add(key);
         return true;
     }
 
@@ -343,19 +346,13 @@ export class Wallet {
      * @param keyId The id of the key to remove.
      */
     deleteKey(keyId: string): boolean {
-        if (!this.senderIsRegistered())
+        if (!this.senderIsInternalUser())
         {
             revert("You are not allowed to remove a key/access this wallet");
             return false;
         }
-        let key = Key.load(keyId);
-        if (!key) {
-            return false;
-        }
-        key.delete();
-
-        let index = this.keys.indexOf(keyId);
-        this.keys.splice(index, 1);
+        Key.delete(keyId);
+        this.keys.remove(keyId);
         return true;
     }
 
@@ -363,7 +360,7 @@ export class Wallet {
      * encrypt a message with the given key.
      */
     encrypt(keyId: string, message: string): string | null {
-        if (!this.senderIsRegistered())
+        if (!this.senderIsExternalUser())
         {
             revert("You are not allowed to encrypt a message/access this wallet");
             return null;
@@ -379,7 +376,7 @@ export class Wallet {
      * encrypt a message with the given key.
      */
     decrypt(keyId:string, cypher: string): string | null{
-        if (!this.senderIsRegistered())
+        if (!this.senderIsExternalUser())
         {
             revert("You are not allowed to encrypt a message/access this wallet");
             return null;
@@ -389,6 +386,35 @@ export class Wallet {
             return null;
         }
         return key.decrypt(cypher);        
+    }
+
+}
+
+export class ChainedWallets extends ChainedItems<Wallet> {
+    constructor() {
+        super();
+    }    
+
+    includes(id: string): boolean {
+        let all = this.getAll();
+        for (let i = 0; i < all.length; i++) {            
+            let item = all[i];
+            if (item.id == id) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    remove(walletId: string): void {
+        let all = this.getAll();
+        for (let i = 0; i < all.length; i++) {
+            let item = all[i];
+            if (item.id == walletId) {
+                this.removeIndex(i);
+                break;
+            }
+        }
     }
 
 }

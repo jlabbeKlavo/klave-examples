@@ -46,7 +46,7 @@ export function listKeys(input: ListKeysInput): void {
     if (!vault) {
         return;
     }
-    vault.listKeys(input.walletId, input.user);
+    vault.listKeys(input.walletId, input.userId);
 }
 
 /**
@@ -60,7 +60,7 @@ export function listWallets(input: ListWalletsInput) : void {
     if (!vault) {
         return;
     }
-    vault.listWallets(input.user);
+    vault.listWallets(input.userId);
 }
 
 /**
@@ -74,7 +74,7 @@ export function listUsers(input: ListUsersInput): void {
     if (!vault) {
         return;
     }
-    vault.listUsers(input.user);
+    vault.listUsers(input.walletId);
 }
 
 /**
@@ -159,34 +159,34 @@ export function decrypt(input: SignInput): void {
 }
 
 /**
- * @transaction add a user to the vault
+ * @transaction create a profile for vault access
  * @param input containing the following fields:
  * - userId: string
  * - role: string, "admin" or "user"
  * @returns success boolean
  */
-export function createUser(input: AddUserInput): void {
+export function createProfile(input: AddUserInput): void {
     let vault = Vault.load();
     if (!vault) {
         return;
     }
-    if (vault.createUser(input.userId, input.role, false)) {
+    if (vault.createProfile(input.userId, input.role, false)) {
         vault.save();
     }
 }
 
 /**
- * @transaction remove a user from the vault
+ * @transaction delete a profile from the vault
  * @param input containing the following fields:
  * - userId: string
  * @returns success boolean
  */
-export function deleteUser(input: RemoveUserInput): void {
+export function deleteProfile(input: RemoveUserInput): void {
     let vault = Vault.load();
     if (!vault) {
         return;
     }
-    if (vault.deleteUser(input.userId)) {
+    if (vault.deleteProfile(input.userId)) {
         vault.save();
     }
 }

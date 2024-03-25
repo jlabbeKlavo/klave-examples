@@ -76,18 +76,18 @@ export class RemoveKeyInput {
 
 @JSON
 export class ListUsersInput {
-    user: string;
+    walletId: string;
 }
 
 @JSON
 export class ListWalletsInput {    
-    user: string;
+    userId: string;
 }
 
 @JSON
 export class ListKeysInput {
     walletId: string;
-    user: string;
+    userId: string;
 }
 
 @JSON

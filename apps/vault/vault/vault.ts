@@ -1,7 +1,8 @@
 import { Ledger, JSON, Context } from "@klave/sdk";
 import { emit, revert } from "../klave/types";
-import { Wallet } from "./wallet";
-import { User } from "./user";
+import { ChainedWallets, Wallet } from "./wallet";
+import { ChainedVaultUsers, VaultUser } from "./vaultUser";
+import { ChainedItems } from "../klave/chained";
 
 const VaultTable = "VaultTable";
 
@@ -11,13 +12,13 @@ const VaultTable = "VaultTable";
 @JSON
 export class Vault {    
     name: string;
-    wallets: Array<string>;
-    users: Array<string>;
+    wallets: ChainedWallets;
+    users: ChainedVaultUsers;
 
     constructor() {
         this.name = "";
-        this.wallets = new Array<string>();
-        this.users = new Array<string>();
+        this.wallets = new ChainedWallets();
+        this.users = new ChainedVaultUsers();
     }
     
     /**
@@ -69,56 +70,49 @@ export class Vault {
      */
     create(name: string): void {
         this.name = name;
-        this.createUser(Context.get('sender'), "admin", true);
+        this.createProfile(Context.get('sender'), "admin", true);
         emit("Vault created successfully: " + this.name);        
         return;
     }
     
     /**
-     * Add a user to the wallet.
+     * Create a profile for vault access.
+     * An admin can actually add a profile with a specific role.
+     * An unregistered user can only add a profile with the role "external user".
      * @param userId The id of the user to add.
      * @param role The role of the user to add.
      */
-    createUser(userId: string, role: string, force: boolean): boolean {
+    createProfile(userId: string, role: string, force: boolean): boolean {
         if (!force && !this.senderIsAdmin())
         {
-            revert("You are not allowed to add a user");
-            return false;
+            revert("You are not allowed to create a profile with a specific role");
+            role = "external user";
+            userId = Context.get('sender');            
         }
 
-        let existingUser = User.load(userId);
+        let existingUser = VaultUser.load(userId);
         if (existingUser) {
             revert("User already exists: " + userId);
             return false;
         }
-        let user = new User(userId);
-        user.role = role;
-        user.save();
-        this.users.push(userId);        
+        let user = VaultUser.create(role);
+        this.users.add<string>(user.id);        
         emit("User added successfully: " + userId);
         return true;
     }
 
     /**
-     * Remove a user from the wallet.
+     * Remove a user from the vault.
      * @param userId The id of the user to remove.
      */
-    deleteUser(userId: string): boolean {
-        if (!this.senderIsAdmin())
+    deleteProfile(userId: string): boolean {
+        if (!this.senderIsAdmin() && userId != Context.get('sender'))
         {
             revert("You are not allowed to remove a user");
             return false;
-        }
-        
-        let user = User.load(userId);
-        if (!user) {
-            revert("User not found: " + userId);
-            return false;
-        }
-        user.delete();
-
-        let index = this.users.indexOf(userId);
-        this.users.splice(index, 1);
+        }        
+        VaultUser.delete(userId);
+        this.users.remove(userId);
         emit("User removed successfully: " + userId);
         return true;
     }
@@ -128,7 +122,7 @@ export class Vault {
      * @returns True if the sender is an admin, false otherwise.
      */
     senderIsAdmin(): boolean {
-        let user = User.load(Context.get('sender'));
+        let user = VaultUser.load(Context.get('sender'));
         if (!user) {
             return false;
         }
@@ -140,7 +134,7 @@ export class Vault {
      * @returns True if the sender is registered, false otherwise.
      */
     senderIsRegistered(): boolean {
-        let user = User.load(Context.get('sender'));
+        let user = VaultUser.load(Context.get('sender'));
         if (!user) {
             return false;
         }
@@ -151,7 +145,7 @@ export class Vault {
      * create a wallet with the given name.
      */
     createWallet(walletName: string): void {
-        if (!this.senderIsAdmin())
+        if (!this.senderIsRegistered())
         {
             revert("You are not allowed to create a wallet");
             return;
@@ -162,10 +156,8 @@ export class Vault {
             revert(`Wallet ${walletName} already exists`);
             return;
         }
-        wallet = new Wallet();
-        wallet.create(walletName);
-        wallet.save();
-        this.wallets.push(wallet.id);
+        wallet = Wallet.create(walletName);
+        this.wallets.add<string>(wallet.id);
         emit("Wallet created successfully: " + wallet.id);
     }
 
@@ -173,57 +165,68 @@ export class Vault {
      * delete a wallet with the given id.
      */
     deleteWallet(walletId: string): void {
-        if (!this.senderIsAdmin())
+        if (!this.senderIsRegistered())
         {
             revert("You are not allowed to delete a wallet");
             return;
         }
 
-        let wallet = Wallet.load(walletId);
-        if (!wallet) {
-            revert(`Wallet ${walletId} does not exist`);
-            return;
-        }
-        wallet.delete();
-        let index = this.wallets.indexOf(walletId);
-        this.wallets.splice(index, 1);
+        Wallet.delete(walletId);
+        this.wallets.remove(walletId);
         emit("Wallet deleted successfully: " + walletId);
     }
 
     /**
-     * list all the keys in the wallet.
+     * list all the wallets in the vault.
      * @returns 
      */
-    listWallets(user: string): void {
-        if (!this.senderIsRegistered())
+    listWallets(userId: string): void {
+        let walletsStr: string = "";
+        if (this.senderIsAdmin())
         {
-            revert("You are not allowed to list the keys in the wallet");
-            return;
-        }        
-
-        let wallets: string = "";
-        for (let i = 0; i < this.wallets.length; i++) {
-            let walletId = this.wallets[i];
-            let walletObj = Wallet.load(walletId);
-            if (!walletObj) {
-                revert(`Wallet ${walletId} does not exist`);
-                continue;
+            if (this.wallets.size == 0) {
+                emit(`No wallets found in the vault`);
+            }
+            if (userId.length == 0) {
+                walletsStr = this.wallets.getAllAsString();
+            }
+            else {
+                let user = VaultUser.load(userId);
+                if (!user) {
+                    revert(`User ${userId} does not exist`);      
+                    return;              
+                }
+                let allUserWallets = user.wallets.getAll();
+                for (let i = 0; i < allUserWallets.length; i++) {
+                    let userWallet = allUserWallets[i];
+                    let walletObj = Wallet.load(userWallet.id);
+                    if (!walletObj) {
+                        revert(`Wallet ${userWallet.id} does not exist`);
+                        continue;
+                    }
+                    if (walletsStr.length > 0) {
+                        walletsStr += ", ";
+                    }
+                    walletsStr += JSON.stringify<Wallet>(walletObj);
+                }
+            }
+        }
+        else {
+            let user = VaultUser.load(userId);
+            if (!user) {
+                revert(`User ${userId} does not exist`);      
+                return;              
             }            
-            if (wallets.length > 0) {
-                wallets += ", ";
-            }
-            if (user.length == 0 || walletObj.userIsRegistered(user)) {
-                wallets += JSON.stringify<Wallet>(walletObj);
-            }
+            walletsStr += user.wallets.getAllAsString();
         }
-        if (wallets.length == 0) {
-            emit(`No wallets found in the wallet`);
+        if (walletsStr.length == 0) {
+            emit(`No wallets found in the vault`);
         }
-        emit(`Keys in the wallet: ${wallets}`);
+        emit(`Wallets in the vault: ${walletsStr}`);
     }
 
     /**
-     * reset the wallet to its initial state.
+     * reset the vault to its initial state.
      * @returns 
      */
     reset(wallets: Array<string>): void {
@@ -235,18 +238,17 @@ export class Vault {
 
         if (wallets.length == 0) {
             this.name = "";        
-            this.wallets = new Array<string>();
-            this.users = new Array<string>();
+            this.wallets = new ChainedWallets();
+            this.users = new ChainedVaultUsers();
             emit("Vault reset successfully");
          } else {
-            for (let i = 0; i < wallets.length; i++) {
-                let wallet = Wallet.load(wallets[i]);
-                if (!wallet) {
-                    continue;
+            let allWallets = this.wallets.getAll();
+            for (let i = 0; i < allWallets.length; i++) {
+                let wallet = allWallets[i];
+                if (wallets.includes(wallet.id)) {
+                    Wallet.delete(wallet.id);
+                    this.wallets.remove(wallet.id);
                 }
-                wallet.delete();
-                let index = this.wallets.indexOf(wallets[i]);
-                this.wallets.splice(index, 1);
             }
             emit("Wallets removed successfully");
         }
@@ -254,39 +256,26 @@ export class Vault {
     }
 
     /**
-     * list all the users in the wallet.
+     * list all the users in the vault.
      */
-    listUsers(user: string): void {
+    listUsers(walletId: string): void {
         let users: string = "";
-        if (this.senderIsAdmin())
+        if (this.senderIsAdmin() && walletId.length == 0)
         {
-            for (let i = 0; i < this.users.length; i++) {
-                let userId = this.users[i];
-                let userObj = User.load(userId);
-                if (!userObj) {
-                    revert(`User ${userId} does not exist`);
-                    continue;
-                }
-                if (users.length > 0) {
-                    users += ", ";
-                }
-                if (user.length == 0 || userObj.id.includes(user)) {
-                    users += JSON.stringify<User>(userObj);
-                }
+            if (this.users.size == 0) {
+                emit(`No users found in the vault`);
+            }
+            else {
+                users = this.users.getAllAsString();                
             }
         }
         else {
-            //return the users within the wallets the specified user is part of
-            for (let i = 0; i < this.wallets.length; i++) {
-                let walletId = this.wallets[i];
-                let wallet = Wallet.load(walletId);
-                if (!wallet) {
-                    continue;
-                }
-                if (users.length > 0) {
-                    users += ", ";
-                }
-                users += wallet.listUsers();
+            let wallet = Wallet.load(walletId);
+            if (!wallet) {
+                return;
+            }
+            if (wallet.senderIsAdmin()) {
+                users = wallet.listUsers();
             }
         }
         if (users.length == 0) {
