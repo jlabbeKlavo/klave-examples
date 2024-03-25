@@ -38,7 +38,7 @@ export class Key {
         emit(`User saved successfully: '${this.id}'`);        
     }
 
-    static create(description: string, type: string): boolean {
+    static create(description: string, type: string): Key | null {
         let key = new Key("");
         key.id = b64encode(convertToUint8Array(Crypto.getRandomValues(64)));
         key.description = description;
@@ -48,25 +48,25 @@ export class Key {
             const keyECDSA = Crypto.ECDSA.generateKey(key.id);
             if (keyECDSA) {
                 emit(`SUCCESS: Key '${key.id}' has been generated`);
-                return true;
+                return key;
             } else {
                 revert(`ERROR: Key '${key.id}' has not been generated`);
-                return false;
+                return null;
             }
         }
         else if (key.type == "AES") {
             const keyAES = Crypto.AES.generateKey(key.id);
             if (keyAES) {
                 emit(`SUCCESS: Key '${key.id}' has been generated`);
-                return true;
+                return key;
             } else {
                 revert(`ERROR: Key '${key.id}' has not been generated`);
-                return false;
+                return null;
             }
         }
         else {
             revert(`ERROR: Key type '${key.type}' is not supported`);
-            return false;
+            return null;
         }
     }
 
@@ -161,6 +161,10 @@ export class ChainedKeys extends ChainedItems<Key> {
                 break;
             }
         }
+    }
+
+    add(key: Key) : void {
+        this.add_with_id(key, key.id);
     }
 
 }

@@ -48,8 +48,13 @@ export class ChainedItems<T> {
         return result;
     }
 
-    add<T>(value: T): void {        
+    create(value: T): void {        
         let new_id = b64encode(convertToUint8Array(Crypto.getRandomValues(64)));
+        this.add_with_id(value, new_id);
+    }
+
+    add_with_id(value: T, id: string): void {        
+        let new_id = id;
         let table = Ledger.getTable(new_id);
         table.set("value", JSON.stringify<T>(value));
         table.set("prev", this.last);
@@ -112,3 +117,35 @@ export class ChainedItems<T> {
     }
 } 
 
+export class ChainedIDs extends ChainedItems<string> {
+    constructor() {
+        super();
+    }    
+
+    includes(id: string): boolean {
+        let all = this.getAll();
+        for (let i = 0; i < all.length; i++) {            
+            let item = all[i];
+            if (item == id) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    remove(id: string): void {
+        let all = this.getAll();
+        for (let i = 0; i < all.length; i++) {
+            let item = all[i];
+            if (item == id) {
+                this.removeIndex(i);
+                break;
+            }
+        }
+    }
+
+    add(id: string) : void {
+        this.create(id);
+    }
+
+}

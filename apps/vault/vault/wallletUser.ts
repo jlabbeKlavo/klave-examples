@@ -76,4 +76,8 @@ export class ChainedWalletUsers extends ChainedItems<WalletUser> {
             }
         }
     }
+
+    add(user: WalletUser) : void {
+        this.add_with_id(user, user.id);
+    }        
 }

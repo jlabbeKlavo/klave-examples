@@ -103,7 +103,7 @@ export class Vault {
             return false;
         }
         let user = VaultUser.create(role);
-        this.users.add<string>(user.id);        
+        this.users.add(user);
         emit("User added successfully: " + user.id);
         return true;
     }
@@ -164,7 +164,7 @@ export class Vault {
             return;
         }
         wallet = Wallet.create(walletName);
-        this.wallets.add<string>(wallet.id);
+        this.wallets.add(wallet);
         emit("Wallet created successfully: " + wallet.id);
     }
 

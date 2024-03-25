@@ -116,4 +116,8 @@ export class ChainedVaultUsers extends ChainedItems<VaultUser> {
             }
         }
     }
+
+    add(user: VaultUser) : void {
+        this.add_with_id(user, user.id);
+    }
 }

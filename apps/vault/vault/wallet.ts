@@ -1,10 +1,10 @@
 import { Ledger, JSON, Context, Crypto } from "@klave/sdk";
 import { emit, revert } from "../klave/types";
 import { ChainedKeys, Key } from "./key";
-import { ChainedVaultUsers, VaultUser } from "./vaultUser";
+import { VaultUser } from "./vaultUser";
 import { encode as b64encode } from 'as-base64/assembly';
 import { convertToUint8Array } from "../klave/helpers";
-import { ChainedItems } from "../klave/chained";
+import { ChainedIDs, ChainedItems } from "../klave/chained";
 
 const WalletTable = "WalletTable";
 
@@ -16,13 +16,13 @@ export class Wallet {
     id: string;
     name: string;
     keys: ChainedKeys;
-    users: ChainedVaultUsers;
+    users: ChainedIDs;
 
     constructor() {
         this.id = "";
         this.name = "";
         this.keys = new ChainedKeys();
-        this.users = new ChainedVaultUsers();
+        this.users = new ChainedIDs();
     }
     
     /**
@@ -117,7 +117,7 @@ export class Wallet {
         existingUser.addWallet(this.id, role);
         existingUser.save();
 
-        this.users.add<string>(userId);
+        this.users.add(userId);
         emit("User added successfully: " + userId);
         return true;
     }
@@ -337,6 +337,10 @@ export class Wallet {
             return false;
         }
         let key = Key.create(description, type);        
+        if (!key) {
+            revert("Failed to create key");
+            return false;
+        }
         this.keys.add(key);
         return true;
     }
@@ -393,7 +397,7 @@ export class Wallet {
 export class ChainedWallets extends ChainedItems<Wallet> {
     constructor() {
         super();
-    }    
+    }        
 
     includes(id: string): boolean {
         let all = this.getAll();
@@ -417,4 +421,7 @@ export class ChainedWallets extends ChainedItems<Wallet> {
         }
     }
 
+    add(wallet: Wallet) : void {
+        this.add_with_id(wallet, wallet.id);
+    }
 }
