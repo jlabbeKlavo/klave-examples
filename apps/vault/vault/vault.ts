@@ -2,7 +2,8 @@ import { Ledger, JSON, Context } from "@klave/sdk";
 import { emit, revert } from "../klave/types";
 import { ChainedWallets, Wallet } from "./wallet";
 import { ChainedVaultUsers, VaultUser } from "./vaultUser";
-import { AccessRequest, ChainedAccessRequests } from "./accessRequests";
+import { AccessRequest, ChainedAccessRequests } from "./requests/accessRequests";
+import { CreateRequest, ChainedCreateRequests } from "./requests/createRequests";
 
 const VaultTable = "VaultTable";
 
@@ -14,7 +15,8 @@ export class Vault {
     name: string;
     wallets: ChainedWallets;
     users: ChainedVaultUsers;
-    accessRequests: ChainedAccessRequests;    
+    accessRequests: ChainedAccessRequests;
+    createRequests: ChainedCreateRequests;
 
 
     constructor() {
@@ -22,6 +24,7 @@ export class Vault {
         this.wallets = new ChainedWallets();
         this.users = new ChainedVaultUsers();
         this.accessRequests = new ChainedAccessRequests();
+        this.createRequests = new ChainedCreateRequests();
     }
     
     /**
@@ -182,6 +185,49 @@ export class Vault {
         wallet.save();
         this.accessRequests.remove(requestId);
         emit("Access request approved successfully: " + requestId);
+        return true;
+    }
+
+    /**
+     * Register a wallet creation request.
+     */
+    registerWalletCreationRequest(walletName: string, userId: string, role: string): boolean {
+        if (this.senderIsAdmin())
+        {
+            revert("You do not need to register an access request");
+            return false;
+        }
+
+        if (!this.createProfile(userId, role, false)) {
+            return false;
+        }
+
+        let createRequest = CreateRequest.create(walletName, userId, role);
+        this.createRequests.add(createRequest);
+        emit("Wallet creation request created successfully: " + createRequest.id);
+        return true;
+    }
+
+    /**
+     * Approve an access request for a user to a wallet.
+     */
+    approveWalletCreationRequest(requestId: string): boolean {
+        let createRequest = CreateRequest.load(requestId);
+        if (!createRequest) {
+            return false;
+        }
+        if (!this.senderIsAdmin()) {
+            revert("You are not allowed to approve a create request");
+            return false;
+        }        
+        let wallet = Wallet.create(createRequest.walletName);
+        if (!wallet) {
+            return false;
+        }
+        wallet.addUser(createRequest.userId, createRequest.role, true);
+        wallet.save();
+        this.createRequests.remove(requestId);
+        emit("Create request approved successfully: " + requestId);
         return true;
     }
 

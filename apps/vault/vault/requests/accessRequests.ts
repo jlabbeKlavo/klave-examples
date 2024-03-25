@@ -1,23 +1,19 @@
 import { JSON, Ledger, Crypto } from "@klave/sdk"
-import { emit, revert } from "../klave/types"
+import { emit, revert } from "../../klave/types"
 import { encode as b64encode } from 'as-base64/assembly';
-import { convertToUint8Array } from "../klave/helpers";
-import { ChainedItems } from "../klave/chained";
+import { convertToUint8Array } from "../../klave/helpers";
+import { ChainedItems } from "../../klave/chained";
+import { Request } from "./requests";
 
 const AccessRequestsTable = "AccessRequestsTable";
 
 @JSON
-export class AccessRequest {
-    id: string;
+export class AccessRequest extends Request {
     walletId: string;
-    userId: string;
-    role: string;
 
     constructor() {
-        this.id = "";
+        super();
         this.walletId = "";
-        this.userId = "";
-        this.role = "";
     }
 
     static load(requestId: string): AccessRequest | null {
@@ -100,7 +96,7 @@ export class ChainedAccessRequests extends ChainedItems<AccessRequest> {
                 str += ", ";
             }            
             if (item) {
-                str += `{"id":"${item.id}","wallet":"${item.walletId}","userId":"${item.userId}","role":"${item.role}"}`;
+                str += `{"id":"${item.id}","walletId":"${item.walletId}","userId":"${item.userId}","role":"${item.role}"}`;
             }
         }
         str = `[${str}]`;

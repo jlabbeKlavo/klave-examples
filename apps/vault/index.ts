@@ -1,4 +1,4 @@
-import { CreateWalletInput, SignInput, VerifyInput, AddUserInput, AddKeyInput, ListKeysInput, RemoveKeyInput, RemoveUserInput, CreateVaultInput, ListWalletsInput, ListUsersInput, AddUserToWalletInput, RemoveUserFromWalletInput, DeleteWalletInput, ApproveRequestInput} from "./vault/inputs/types";
+import { CreateWalletInput, SignInput, VerifyInput, AddUserInput, AddKeyInput, ListKeysInput, RemoveKeyInput, RemoveUserInput, CreateVaultInput, ListWalletsInput, ListUsersInput, AddUserToWalletInput, RemoveUserFromWalletInput, DeleteWalletInput, ApproveRequestInput, RequestAccessInput, RequestWalletCreationInput} from "./vault/inputs/types";
 import { Vault } from "./vault/vault";
 import { emit, revert } from "./klave/types";
 
@@ -206,7 +206,7 @@ export function deleteProfile(input: RemoveUserInput): void {
  * - role: string, "admin", "internalUser" or  "externalUser"
  * @returns success boolean
  */
-export function requestAccess(input: AddUserToWalletInput): void {
+export function requestAccess(input: RequestAccessInput): void {
     let vault = Vault.load();
     if (!vault) {
         return;
@@ -293,6 +293,36 @@ export function deleteWallet(input: DeleteWalletInput): void {
         return;
     }    
     vault.deleteWallet(input.walletId);
+    vault.save();
+}
+
+/**
+ * @transaction request creation of a wallet
+ * @param input containing the following fields:
+ * - name: string
+ * @returns success boolean
+ */
+export function requestWalletCreation(input: RequestWalletCreationInput): void {
+    let vault = Vault.load();
+    if (!vault) {        
+        return;
+    }    
+    vault.registerWalletCreationRequest(input.walletName, input.userId, input.role);
+    vault.save();
+}
+
+/**
+ * @transaction approve creation of a wallet
+ * @param input containing the following fields:
+ * - requestId: string
+ * @returns success boolean
+ */
+export function approveWalletCreation(input: ApproveRequestInput): void {
+    let vault = Vault.load();
+    if (!vault) {        
+        return;
+    }    
+    vault.approveWalletCreationRequest(input.requestId);
     vault.save();
 }
 

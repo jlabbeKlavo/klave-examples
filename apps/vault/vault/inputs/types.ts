@@ -61,6 +61,20 @@ export class RemoveUserFromWalletInput {
     userId: string;
 }
 
+@JSON 
+export class RequestAccessInput {    
+    walletId: string;    
+    userId: string;
+    role: string;
+}
+
+@JSON 
+export class RequestWalletCreationInput {    
+    walletName: string;    
+    userId: string;
+    role: string;
+}
+
 @JSON
 export class ApproveRequestInput {
     requestId: string;
