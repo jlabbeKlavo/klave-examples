@@ -2,7 +2,7 @@ import { Ledger, JSON, Context } from "@klave/sdk";
 import { emit, revert } from "../klave/types";
 import { ChainedWallets, Wallet } from "./wallet";
 import { ChainedVaultUsers, VaultUser } from "./vaultUser";
-import { ChainedItems } from "../klave/chained";
+import { AccessRequest, ChainedAccessRequests } from "./accessRequests";
 
 const VaultTable = "VaultTable";
 
@@ -14,11 +14,14 @@ export class Vault {
     name: string;
     wallets: ChainedWallets;
     users: ChainedVaultUsers;
+    accessRequests: ChainedAccessRequests;    
+
 
     constructor() {
         this.name = "";
         this.wallets = new ChainedWallets();
         this.users = new ChainedVaultUsers();
+        this.accessRequests = new ChainedAccessRequests();
     }
     
     /**
@@ -128,6 +131,53 @@ export class Vault {
         VaultUser.delete(userId);
         this.users.remove(userId);
         emit("User removed successfully: " + userId);
+        return true;
+    }
+
+    /**
+     * Register an access request for a user to a wallet.
+     */
+    registerAccessRequest(walletId: string, userId: string, role: string): boolean {
+        if (this.senderIsAdmin())
+        {
+            revert("You do not need to register an access request");
+            return false;
+        }
+
+        let wallet = Wallet.load(walletId);
+        if (!wallet) {
+            return false;
+        }
+        if (wallet.senderIsAdmin()) {
+            revert("You do not need to register an access request for this wallet");
+        }
+
+        let accessRequest = AccessRequest.create(walletId, userId, role);
+        this.accessRequests.add(accessRequest);
+        emit("Access request created successfully: " + accessRequest.id);        
+        return true;
+    }
+
+    /**
+     * Approve an access request for a user to a wallet.
+     */
+    approveAccessRequest(requestId: string): boolean {
+        let accessRequest = AccessRequest.load(requestId);
+        if (!accessRequest) {
+            return false;
+        }
+        let wallet = Wallet.load(accessRequest.walletId);
+        if (!wallet) {
+            return false;
+        }
+        if (!wallet.senderIsAdmin()) {
+            revert("You are not allowed to approve an access request");
+            return false;
+        }        
+        wallet.addUser(accessRequest.userId, accessRequest.role, true);
+        wallet.save();
+        this.accessRequests.remove(requestId);
+        emit("Access request approved successfully: " + requestId);
         return true;
     }
 

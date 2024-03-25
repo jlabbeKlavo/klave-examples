@@ -1,10 +1,11 @@
-import { RenameWalletInput, CreateWalletInput, SignInput, VerifyInput, AddUserInput, AddKeyInput, ListKeysInput, ResetInput, RemoveKeyInput, RemoveUserInput, CreateVaultInput, ListWalletsInput, ListUsersInput, AddUserToWalletInput, RemoveUserFromWalletInput, DeleteWalletInput} from "./vault/inputs/types";
+import { CreateWalletInput, SignInput, VerifyInput, AddUserInput, AddKeyInput, ListKeysInput, RemoveKeyInput, RemoveUserInput, CreateVaultInput, ListWalletsInput, ListUsersInput, AddUserToWalletInput, RemoveUserFromWalletInput, DeleteWalletInput, ApproveRequestInput} from "./vault/inputs/types";
 import { Vault } from "./vault/vault";
 import { emit, revert } from "./klave/types";
 
 /**
- * @transaction add a key to the wallet
+ * @transaction create a key in the given wallet
  * @param input containing the following fields:
+ * - walletId: string
  * - description: string
  * - type: string
  * @returns success boolean
@@ -20,8 +21,9 @@ export function createKey(input: AddKeyInput): void {
 }
 
 /**
- * @transaction remove a key from the wallet
+ * @transaction delete a key from the given wallet
  * @param input containing the following fields:
+ * - walletId: string
  * - keyId: string
  * @returns success boolean
  */
@@ -36,8 +38,9 @@ export function deleteKey(input: RemoveKeyInput): void {
 }
 
 /**
- * @query list all keys in the wallet
+ * @query list all keys from the given wallet
  * @param input containing the following fields:
+ * - walletId: string
  * - user: string, the user to list the keys for (optional)
  * @returns the list of keys
  */
@@ -52,7 +55,7 @@ export function listKeys(input: ListKeysInput): void {
 /**
  * @query list all wallets
  * @param input containing the following fields:
- * - user: string, the user to list the wallets for (optional)
+ * - userId: string, the user to list the wallets for (optional)
  * @returns the list of wallets
  */
 export function listWallets(input: ListWalletsInput) : void {
@@ -66,7 +69,7 @@ export function listWallets(input: ListWalletsInput) : void {
 /**
  * @query list all users
  * @param input containing the following fields:
- * - user: string, the user to list the users for (optional)
+ * - walletId: string, the wallet to list the users for (optional)
  * @returns the list of users
  */
 export function listUsers(input: ListUsersInput): void {
@@ -80,6 +83,7 @@ export function listUsers(input: ListUsersInput): void {
 /**
  * @query
  * @param input containing the following fields:
+ * - walletId: string
  * - keyId: string
  * - payload: string
  * @returns success boolean and the created text
@@ -100,6 +104,7 @@ export function sign(input: SignInput) : void {
 /**
  * @query 
  * @param input containing the following fields:
+ * - walletId: string
  * - keyId: string
  * - payload: string
  * - signature: string
@@ -121,6 +126,7 @@ export function verify(input: VerifyInput) : void {
 /**
  * @query 
  * @param input containing the following fields:
+ * - walletId: string
  * - keyId: string
  * - payload: string 
  * @returns success boolean and the crypted message
@@ -141,6 +147,7 @@ export function encrypt(input: SignInput): void {
 /**
  * @query 
  * @param input containing the following fields:
+ * - walletId: string
  * - keyId: string
  * - payload: string
  * @returns success boolean and text decyphered
@@ -190,6 +197,41 @@ export function deleteProfile(input: RemoveUserInput): void {
         vault.save();
     }
 }
+
+/**
+ * @transaction request access to a specific wallet
+ * @param input containing the following fields:
+ * - walletId: string
+ * - userId: string
+ * - role: string, "admin", "internalUser" or  "externalUser"
+ * @returns success boolean
+ */
+export function requestAccess(input: AddUserToWalletInput): void {
+    let vault = Vault.load();
+    if (!vault) {
+        return;
+    }
+    if (vault.registerAccessRequest(input.walletId, input.userId, input.role)) {
+        vault.save();
+    }
+}
+
+/**
+ * @transaction approve access to a specific wallet
+ * @param input containing the following fields:
+ * - requestId: string
+ * @returns success boolean
+ */
+export function approveAccess(input: ApproveRequestInput): void {
+    let vault = Vault.load();
+    if (!vault) {
+        return;
+    }
+    if (vault.approveAccessRequest(input.requestId)) {
+        vault.save();
+    }
+}
+
 
 /**
  * @transaction add a user to a wallet
