@@ -202,7 +202,7 @@ export class Vault {
                 emit(`No wallets found in the vault`);
             }
             if (userId.length == 0) {
-                walletsStr = this.wallets.getNames();
+                walletsStr = this.wallets.getInfo();
             }
             else {
                 let user = VaultUser.load(userId);
@@ -221,7 +221,7 @@ export class Vault {
                     if (walletsStr.length > 0) {
                         walletsStr += ", ";
                     }
-                    walletsStr += walletObj.name;
+                    walletsStr += walletObj.getInfo();
                 }
             }
         }
@@ -231,7 +231,7 @@ export class Vault {
                 revert(`User ${userId} does not exist`);      
                 return;              
             }            
-            walletsStr += user.wallets.getNames();
+            walletsStr += user.wallets.getInfo();
         }
         if (walletsStr.length == 0) {
             emit(`No wallets found in the vault`);

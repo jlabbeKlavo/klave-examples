@@ -82,7 +82,7 @@ export class ChainedWalletUsers extends ChainedItems<WalletUser> {
         this.add_with_id(user, user.id);
     }   
     
-    getNames(): string {
+    getInfo(): string {
         let str = "";
         let all = this.getAll();
         for (let i = 0; i < all.length; i++) {            
@@ -92,9 +92,10 @@ export class ChainedWalletUsers extends ChainedItems<WalletUser> {
             }
             let wallet = Wallet.load(item.walletId);
             if (wallet) {
-                str += wallet.name;
+                str += `{"id":"${wallet.id}","name":"${wallet.name}"}`;
             }
         }
+        str = `[${str}]`;
         return str;
     }    
 }

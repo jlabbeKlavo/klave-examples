@@ -392,6 +392,12 @@ export class Wallet {
         return key.decrypt(cypher);        
     }
 
+    /**
+     * return the wallet info.     
+     */
+    getInfo(): string {
+        return `{"id":"${this.id}","name":"${this.name}"}`;
+    }
 }
 
 export class ChainedWallets extends ChainedItems<Wallet> {
@@ -425,16 +431,19 @@ export class ChainedWallets extends ChainedItems<Wallet> {
         this.add_with_id(wallet, wallet.id);
     }
 
-    getNames(): string {
+    getInfo(): string {
         let str = "";
         let all = this.getAll();
         for (let i = 0; i < all.length; i++) {            
             let item = all[i];
             if (str.length > 0) {
                 str += ", ";
+            }            
+            if (item) {
+                str += `{"id":"${item.id}","name":"${item.name}"}`;
             }
-            str += item.name;
         }
+        str = `[${str}]`;
         return str;
-    }
+    }        
 }

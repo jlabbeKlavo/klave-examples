@@ -121,16 +121,19 @@ export class ChainedVaultUsers extends ChainedItems<VaultUser> {
         this.add_with_id(user, user.id);
     }
 
-    getNames(): string {
+    getInfo(): string {
         let str = "";
         let all = this.getAll();
         for (let i = 0; i < all.length; i++) {            
             let item = all[i];
             if (str.length > 0) {
                 str += ", ";
+            }            
+            if (item) {
+                str += `{"id":"${item.id}","role":"${item.role}"}`;
             }
-            str += item.id;
         }
+        str = `[${str}]`;
         return str;
     }    
 }

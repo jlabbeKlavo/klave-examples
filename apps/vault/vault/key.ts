@@ -166,5 +166,4 @@ export class ChainedKeys extends ChainedItems<Key> {
     add(key: Key) : void {
         this.add_with_id(key, key.id);
     }
-
 }
