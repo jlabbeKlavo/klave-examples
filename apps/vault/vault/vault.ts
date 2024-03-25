@@ -152,9 +152,13 @@ export class Vault {
             revert("You do not need to register an access request for this wallet");
         }
 
+        if (!this.createProfile(userId, role, false)) {
+            return false;
+        }
+
         let accessRequest = AccessRequest.create(walletId, userId, role);
         this.accessRequests.add(accessRequest);
-        emit("Access request created successfully: " + accessRequest.id);        
+        emit("Access request created successfully: " + accessRequest.id);
         return true;
     }
 
@@ -276,9 +280,12 @@ export class Vault {
             }
         }
         else {
+            if (userId.length == 0) {
+                emit(`No privileges were found for ${userId} to display wallets in this vault`);
+                return;
+            }
             let user = VaultUser.load(userId);
             if (!user) {
-                revert(`User ${userId} does not exist`);      
                 return;              
             }            
             walletsStr += user.wallets.getInfo();
