@@ -3,6 +3,7 @@ import { emit, index, revert } from "../klave/types"
 import { ChainedItems } from "../klave/chained";
 import { encode as b64encode } from 'as-base64/assembly';
 import { convertToUint8Array } from "../klave/helpers";
+import { Wallet } from "./wallet";
 
 const WalletUsersTable = "WalletUsersTable";
 
@@ -79,5 +80,21 @@ export class ChainedWalletUsers extends ChainedItems<WalletUser> {
 
     add(user: WalletUser) : void {
         this.add_with_id(user, user.id);
-    }        
+    }   
+    
+    getNames(): string {
+        let str = "";
+        let all = this.getAll();
+        for (let i = 0; i < all.length; i++) {            
+            let item = all[i];
+            if (str.length > 0) {
+                str += ", ";
+            }
+            let wallet = Wallet.load(item.walletId);
+            if (wallet) {
+                str += wallet.name;
+            }
+        }
+        return str;
+    }    
 }

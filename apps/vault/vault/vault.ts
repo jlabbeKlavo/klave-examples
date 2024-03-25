@@ -22,6 +22,13 @@ export class Vault {
     }
     
     /**
+     * toString
+     */
+    toString(): string {        
+        return JSON.stringify<Vault>(this);
+    }
+
+    /**
      * load the wallet from the ledger.
      * @returns true if the wallet was loaded successfully, false otherwise.
      */
@@ -32,7 +39,7 @@ export class Vault {
             return null;
         }
         let vault = JSON.parse<Vault>(vaultTable);
-        emit("Vault loaded successfully: " + vaultTable);
+        emit("Vault loaded successfully: " + vault.toString());
         return vault;
     }
  
@@ -42,7 +49,7 @@ export class Vault {
     save(): void {
         let vaultTable = JSON.stringify<Vault>(this);
         Ledger.getTable(VaultTable).set("ALL", vaultTable);
-        emit("Vault saved successfully: " + vaultTable);
+        emit("Vault saved successfully: " + this.toString());
     }
 
     /**
@@ -195,7 +202,7 @@ export class Vault {
                 emit(`No wallets found in the vault`);
             }
             if (userId.length == 0) {
-                walletsStr = this.wallets.getAllAsString();
+                walletsStr = this.wallets.getNames();
             }
             else {
                 let user = VaultUser.load(userId);
@@ -214,7 +221,7 @@ export class Vault {
                     if (walletsStr.length > 0) {
                         walletsStr += ", ";
                     }
-                    walletsStr += JSON.stringify<Wallet>(walletObj);
+                    walletsStr += walletObj.name;
                 }
             }
         }
@@ -224,7 +231,7 @@ export class Vault {
                 revert(`User ${userId} does not exist`);      
                 return;              
             }            
-            walletsStr += user.wallets.getAllAsString();
+            walletsStr += user.wallets.getNames();
         }
         if (walletsStr.length == 0) {
             emit(`No wallets found in the vault`);

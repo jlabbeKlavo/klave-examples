@@ -2,7 +2,7 @@ import { Ledger, JSON, Crypto, Context } from "@klave/sdk";
 import { emit, index, revert } from "../klave/types"
 import { Wallet } from "./wallet";
 import { ChainedItems } from "../klave/chained";
-import { ChainedWalletUsers, WalletUser } from "./wallletUser";
+import { ChainedWalletUsers, WalletUser } from "./walletUser";
 import { encode as b64encode } from 'as-base64/assembly';
 import { convertToUint8Array } from "../klave/helpers";
 
@@ -120,4 +120,17 @@ export class ChainedVaultUsers extends ChainedItems<VaultUser> {
     add(user: VaultUser) : void {
         this.add_with_id(user, user.id);
     }
+
+    getNames(): string {
+        let str = "";
+        let all = this.getAll();
+        for (let i = 0; i < all.length; i++) {            
+            let item = all[i];
+            if (str.length > 0) {
+                str += ", ";
+            }
+            str += item.id;
+        }
+        return str;
+    }    
 }

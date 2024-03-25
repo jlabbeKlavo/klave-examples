@@ -424,4 +424,17 @@ export class ChainedWallets extends ChainedItems<Wallet> {
     add(wallet: Wallet) : void {
         this.add_with_id(wallet, wallet.id);
     }
+
+    getNames(): string {
+        let str = "";
+        let all = this.getAll();
+        for (let i = 0; i < all.length; i++) {            
+            let item = all[i];
+            if (str.length > 0) {
+                str += ", ";
+            }
+            str += item.name;
+        }
+        return str;
+    }
 }
