@@ -280,7 +280,7 @@ export class Vault {
                 emit(`No users found in the vault`);
             }
             else {
-                users = this.users.getAllAsString();                
+                users = this.users.getInfo();
             }
         }
         else {
@@ -293,9 +293,9 @@ export class Vault {
             }
         }
         if (users.length == 0) {
-            emit(`No users found in the wallet`);
+            emit(`No users found in the vault`);
         }
-        emit(`Users in the wallet: ${users}`);                
+        emit(`Users in the vault: ${users}`);                
     }
 
     /**

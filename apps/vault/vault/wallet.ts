@@ -414,6 +414,7 @@ export class ChainedWallets extends ChainedItems<Wallet> {
 
     includes(id: string): boolean {
         let all = this.getAll();
+        emit(`Checking if walletId ${id} is in the list of wallets: ${JSON.stringify(all)}`);
         for (let i = 0; i < all.length; i++) {            
             let item = all[i];
             if (item.id == id) {

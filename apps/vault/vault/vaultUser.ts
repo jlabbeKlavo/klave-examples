@@ -66,7 +66,7 @@ export class VaultUser {
     }
 
     addWallet(walletId: string, role: string): boolean {
-        if (this.wallets.includes(walletId)) {
+        if (this.wallets.includes(walletId) != -1) {
             revert("User already has a profile for this wallet");
             return false;
         }
@@ -80,7 +80,7 @@ export class VaultUser {
     }
 
     removeWallet(walletId: string): boolean {
-        if (!this.wallets.includes(walletId)) {
+        if (this.wallets.includes(walletId) == -1) {
             revert("User does not have a profile for this wallet");
             return false;
         }
@@ -97,6 +97,7 @@ export class ChainedVaultUsers extends ChainedItems<VaultUser> {
 
     includes(id: string): boolean {
         let all = this.getAll();
+        emit(`Checking if userId ${id} is in the list of users: ${JSON.stringify(all)}`);
         for (let i = 0; i < all.length; i++) {            
             let item = all[i];
             if (item.id == id) {

@@ -58,6 +58,7 @@ export class ChainedWalletUsers extends ChainedItems<WalletUser> {
 
     includes(walletId: string): index {
         let all = this.getAll();
+        emit(`Checking if id "${walletId}" is in the list of wallets for this user: ${JSON.stringify(all)}`);
         for (let i = 0; i < all.length; i++) {            
             let item = all[i];
             if (item.walletId == walletId) {
