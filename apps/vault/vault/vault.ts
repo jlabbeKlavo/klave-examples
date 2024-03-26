@@ -4,6 +4,7 @@ import { ChainedWallets, Wallet } from "./wallet";
 import { ChainedVaultUsers, VaultUser } from "./vaultUser";
 import { AccessRequest, ChainedAccessRequests } from "./requests/accessRequests";
 import { CreateRequest, ChainedCreateRequests } from "./requests/createRequests";
+import { Recovery } from "./recovery";
 
 const VaultTable = "VaultTable";
 
@@ -14,10 +15,10 @@ const VaultTable = "VaultTable";
 export class Vault {    
     name: string;
     wallets: ChainedWallets;
-    users: ChainedVaultUsers;
+    users: ChainedVaultUsers;    
     accessRequests: ChainedAccessRequests;
     createRequests: ChainedCreateRequests;
-
+    recoveryPolicy: Recovery;
 
     constructor() {
         this.name = "";
@@ -25,15 +26,9 @@ export class Vault {
         this.users = new ChainedVaultUsers();
         this.accessRequests = new ChainedAccessRequests();
         this.createRequests = new ChainedCreateRequests();
+        this.recoveryPolicy = new Recovery();
     }
     
-    /**
-     * toString
-     */
-    toString(): string {        
-        return JSON.stringify<Vault>(this);
-    }
-
     /**
      * load the wallet from the ledger.
      * @returns true if the wallet was loaded successfully, false otherwise.
@@ -45,7 +40,7 @@ export class Vault {
             return null;
         }
         let vault = JSON.parse<Vault>(vaultTable);
-        emit("Vault loaded successfully: " + vault.toString());
+        emit("Vault loaded successfully: " + JSON.stringify(vault));
         return vault;
     }
  
@@ -55,7 +50,7 @@ export class Vault {
     save(): void {
         let vaultTable = JSON.stringify<Vault>(this);
         Ledger.getTable(VaultTable).set("ALL", vaultTable);
-        emit("Vault saved successfully: " + this.toString());
+        emit("Vault saved successfully: " + JSON.stringify(this));
     }
 
     /**
@@ -90,6 +85,7 @@ export class Vault {
         vault = new Vault();
         vault.name = name;
         vault.createProfile(Context.get('sender'), "admin", true);
+        vault.recoveryPolicy.createDefault();
         vault.save();
         emit("Vault created successfully: " + vault.name);        
         return;
@@ -135,6 +131,26 @@ export class Vault {
         this.users.remove(userId);
         emit("User removed successfully: " + userId);
         return true;
+    }
+
+    /**
+     * Create a recovery key for the vault.
+     */
+    createRecoveryKey(): void {
+        if (!this.senderIsAdmin())
+        {
+            revert("You are not allowed to create a recovery key");
+            return;
+        }
+        let key = Crypto.AES.generateKey("recovery");
+        let wallet = Wallet.load("recovery");
+        if (!wallet) {
+            wallet = Wallet.create("recovery");
+            this.wallets.add(wallet);
+        }
+        wallet.createKey("recovery", "AES");
+        wallet.save();
+        emit("Recovery key created successfully");
     }
 
     /**

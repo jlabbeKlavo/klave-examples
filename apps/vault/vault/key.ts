@@ -134,6 +134,11 @@ export class Key {
         }        
         return KeyAES.decrypt(convertToU8Array(b64decode(cypher)));
     }
+
+    import(publicKeyb64: string) : void {
+        
+
+    }
 }
 
 export class ChainedKeys extends ChainedItems<Key> {
