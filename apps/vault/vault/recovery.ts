@@ -67,7 +67,23 @@ export class Recovery {
         this.multiCustody.push(recoveryUser);
     }
 
+    /**
+     * Read the file words.json and return a given number of random words.
+     * @param nb 
+     * @returns 
+     */
     getRandomWords(nb: number) : string {
+        const words = JSON.parse<string[]>("words.json");
+        let randomWords = new Array<string>();
+        for (let i = 0; i < nb; i++) {
+            let values = Crypto.getRandomValues(1);
+            randomWords.push(words[values[0] * words.length]);
+        }
+        return randomWords.join('-');
+    }
+
+
+    getRandomWordsViaHttp(nb: number) : string {
         const query: HttpRequest = {
             hostname: 'random-word-api.herokuapp.com',
             port: 443,
