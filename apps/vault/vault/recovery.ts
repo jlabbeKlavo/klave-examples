@@ -84,11 +84,11 @@ export class Recovery {
     }
 
 
-    getRandomWordsViaHttp(nb: number) : string {
+    getRandomWordsViaHttp(nb: number) : string {             
         const query: HttpRequest = {
             hostname: 'random-word-api.herokuapp.com',
             port: 443,
-            path: `/word?number=${nb}`,
+            path: "/word?number=" + nb.toString(),
             headers: [],
             body: ''
         };
