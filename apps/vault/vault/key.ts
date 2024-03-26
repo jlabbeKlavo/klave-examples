@@ -7,6 +7,14 @@ import { ChainedItems } from '../klave/chained';
 
 const KeysTable = "KeysTable";
 
+/**
+ * Key class
+ * Note that the Key class is a JSON class, which means that it can be serialized and deserialized to/from JSON.
+ * This is useful when storing the Key object in the ledger.
+ * A private key 
+ */
+
+
 @JSON
 export class Key {
     id: string;
@@ -105,7 +113,7 @@ export class Key {
         if (this.type != "ECDSA") {
             revert("ERROR: Key type is not ECDSA")
             return false;
-        }        
+        }       
         return verify(new VerifyInput(this.id, message, signature));
     }    
 
@@ -135,9 +143,21 @@ export class Key {
         return KeyAES.decrypt(convertToU8Array(b64decode(cypher)));
     }
 
-    import(publicKeyb64: string) : void {
-        
+    import(publicKeyb64: string, description: string, type: string) : Key | null {
+        let key = new Key("");
+        key.id = publicKeyb64;
+        key.description = description;
+        key.type = type;
+        key.owner = Context.get('sender');
 
+        const keyECDSA = Crypto.ECDSA.generateKey(key.id);
+        if (keyECDSA) {
+            emit(`SUCCESS: Key '${key.id}' has been generated`);
+            return key;
+        } else {
+            revert(`ERROR: Key '${key.id}' has not been generated`);
+            return null;
+        }
     }
 }
 

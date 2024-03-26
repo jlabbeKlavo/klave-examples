@@ -60,7 +60,7 @@ export class Recovery {
 
     createDefault(): void {
         this.backupKey = b64encode(convertToUint8Array(Crypto.getRandomValues(64)));
-        let recoveryUser = new RecoveryUser(Context.get('sender'), this.getRandomWordsViaHttp(20));        
+        let recoveryUser = new RecoveryUser(Context.get('sender'), b64encode(convertToUint8Array(Crypto.getRandomValues(20))));        
 
         emit("Please save the following recovery code in a safe place: {" + recoveryUser.code + "} for user: " + recoveryUser.id);
 
