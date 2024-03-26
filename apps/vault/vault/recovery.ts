@@ -60,7 +60,7 @@ export class Recovery {
 
     createDefault(): void {
         this.backupKey = b64encode(convertToUint8Array(Crypto.getRandomValues(64)));
-        let recoveryUser = new RecoveryUser(Context.get('sender'), this.getRandomWords(5));        
+        let recoveryUser = new RecoveryUser(Context.get('sender'), this.getRandomWordsViaHttp(5));        
 
         emit("Please save the following recovery code in a safe place: {" + recoveryUser.code + "} for user: " + recoveryUser.id);
 
@@ -73,13 +73,14 @@ export class Recovery {
      * @returns 
      */
     getRandomWords(nb: number) : string {
-        const words = JSON.parse<string[]>("words.json");
-        let randomWords = new Array<string>();
-        for (let i = 0; i < nb; i++) {
-            let values = Crypto.getRandomValues(1);
-            randomWords.push(words[values[0] * words.length]);
-        }
-        return randomWords.join('-');
+        // const words = JSON.parse<string[]>("words.json");
+        // let randomWords = new Array<string>();
+        // for (let i = 0; i < nb; i++) {
+        //     let values = Crypto.getRandomValues(1);
+        //     randomWords.push(words[values[0] * words.length]);
+        // }
+        // return randomWords.join('-');
+        return "Not implemented yet !";
     }
 
 
