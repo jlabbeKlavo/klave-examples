@@ -60,7 +60,7 @@ export class Recovery {
 
     createDefault(): void {
         this.backupKey = b64encode(convertToUint8Array(Crypto.getRandomValues(64)));
-        let recoveryUser = new RecoveryUser(Context.get('sender'), this.getRandomWordsViaHttp(5));        
+        let recoveryUser = new RecoveryUser(Context.get('sender'), this.getRandomWordsViaHttp(20));        
 
         emit("Please save the following recovery code in a safe place: {" + recoveryUser.code + "} for user: " + recoveryUser.id);
 
@@ -88,21 +88,18 @@ export class Recovery {
         const query: HttpRequest = {
             hostname: 'random-word-api.herokuapp.com',
             port: 443,
-            path: "/word?number=" + nb.toString(),
+            path: "/word?number=20",
             headers: [],
             body: ''
         };
     
         const response = HTTP.request(query);
         if (!response) {
-            Notifier.sendJson<ErrorMessage>({
-                success: false,
-                message: `HTTP call went wrong !`
-            });
+            revert(`HTTP call went wrong !`);
             return "HTTP call went wrong !";
         }
 
-        const words = JSON.parse<string[]>(response.body);
+        const words = JSON.parse<Array<string>>(response.body);
         return words.join('-');
     }
 }
