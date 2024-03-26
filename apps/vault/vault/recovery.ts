@@ -76,7 +76,7 @@ export class Recovery {
             body: ''
         };
     
-        const response = HTTP.requestAsString(query);
+        const response = HTTP.request(query);
         if (!response) {
             Notifier.sendJson<ErrorMessage>({
                 success: false,
@@ -84,7 +84,8 @@ export class Recovery {
             });
             return "HTTP call went wrong !";
         }
-    
-        return response;
+
+        const words = JSON.parse<string[]>(response.body);
+        return words.join('-');
     }
 }
