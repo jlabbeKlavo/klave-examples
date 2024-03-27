@@ -68,7 +68,7 @@ export class Recovery {
     }
 
     /**
-     * Read the file words.json and return a given number of random words.
+     * Read the file "words.json" and return a given number of random words.
      * @param nb 
      * @returns 
      */
