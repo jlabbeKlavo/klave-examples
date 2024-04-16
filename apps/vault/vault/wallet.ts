@@ -12,7 +12,7 @@ const WalletTable = "WalletTable";
  * An Wallet is associated with a list of users and holds keys.
  */
 @JSON
-export class Wallet {    
+export class Wallet {
     id: string;
     name: string;
     keys: ChainedKeys;
@@ -24,7 +24,7 @@ export class Wallet {
         this.keys = new ChainedKeys();
         this.users = new ChainedIDs();
     }
-    
+
     /**
      * load the wallet from the ledger.
      * @returns true if the wallet was loaded successfully, false otherwise.
@@ -39,7 +39,7 @@ export class Wallet {
         emit("Wallet loaded successfully: " + walletTable);
         return wlt;
     }
- 
+
     /**
      * save the wallet to the ledger.
      */
@@ -52,7 +52,7 @@ export class Wallet {
     /**
      * Create a wallet with the given name.
      * Also adds the sender as an admin user.
-     * @param name 
+     * @param name
      */
     static create(name: string): Wallet {
         let wallet = new Wallet();
@@ -63,12 +63,12 @@ export class Wallet {
         emit("Wallet created successfully: " + wallet.name);
         return wallet;
     }
-    
+
     /**
      * rename the wallet.
-     * @param newName 
+     * @param newName
      */
-    rename(oldName: string, newName: string): void {        
+    rename(oldName: string, newName: string): void {
         if (!this.senderIsAdmin())
         {
             revert("You are not allowed to rename the wallet");
@@ -83,20 +83,20 @@ export class Wallet {
     }
 
     /**
-     * delete the wallet.     
+     * delete the wallet.
      */
     static delete(walletId: string): void {
         let wallet = Wallet.load(walletId);
         if (!wallet) {
             return;
-        }        
+        }
         wallet.keys.reset();
         wallet.users.reset();
         Ledger.getTable(WalletTable).unset(walletId);
         emit(`Wallet deleted successfully: '${walletId}'`);
     }
 
-    
+
     /**
      * Add a user to the wallet.
      * @param userId The id of the user to add.
@@ -142,7 +142,7 @@ export class Wallet {
             user.removeWallet(this.id);
             user.save();
         }
-        
+
         this.users.remove(userId);
 
         emit("User removed successfully: " + userId);
@@ -245,26 +245,26 @@ export class Wallet {
 
     /**
      * list all the keys in the wallet.
-     * @returns 
+     * @returns
      */
     listKeys(user: string): string {
         if (!this.senderIsInternalUser())
         {
             revert("You are not allowed to list the keys in the wallet");
             return "";
-        }        
+        }
 
         let keys = this.keys.getAllAsString();
         if (keys.length == 0) {
             emit(`No keys found in the wallet`);
         }
-        emit(`Keys in the wallet: ${keys}`);       
-        return keys; 
+        emit(`Keys in the wallet: ${keys}`);
+        return keys;
     }
 
     /**
      * reset the wallet to its initial state.
-     * @returns 
+     * @returns
      */
     reset(keys: Array<string>): void {
         if (!this.senderIsAdmin())
@@ -274,12 +274,12 @@ export class Wallet {
         }
 
         if (keys.length == 0) {
-            this.name = "";        
+            this.name = "";
             this.keys.reset();
             this.users.reset();
             emit("Wallet reset successfully");
          } else {
-            let allKeys = this.keys.getAll();    
+            let allKeys = this.keys.getAll();
             // for each key in the list, remove it from the wallet
             for (let j = 0; j < keys.length; j++) {
                 for (let i = 0; i < allKeys.length; i++) {
@@ -310,7 +310,7 @@ export class Wallet {
         if (!key) {
             return null;
         }
-        return key.sign(payload);        
+        return key.sign(payload);
     }
 
     /**
@@ -329,7 +329,7 @@ export class Wallet {
         if (!key) {
             return false;
         }
-        return key.verify(payload, signature);        
+        return key.verify(payload, signature);
     }
 
     /**
@@ -343,7 +343,7 @@ export class Wallet {
             revert("You are not allowed to add a key/access this wallet");
             return false;
         }
-        let key = Key.create(description, type);        
+        let key = Key.create(description, type);
         if (!key) {
             revert("Failed to create key");
             return false;
@@ -380,7 +380,7 @@ export class Wallet {
         if (!key) {
             return null;
         }
-        return key.encrypt(message);        
+        return key.encrypt(message);
     }
 
     /**
@@ -396,11 +396,11 @@ export class Wallet {
         if (!key) {
             return null;
         }
-        return key.decrypt(cypher);        
+        return key.decrypt(cypher);
     }
 
     /**
-     * return the wallet info.     
+     * return the wallet info.
      */
     getInfo(): string {
         return `{"id":"${this.id}","name":"${this.name}"}`;
@@ -410,12 +410,12 @@ export class Wallet {
 export class ChainedWallets extends ChainedItems<Wallet> {
     constructor() {
         super();
-    }        
+    }
 
     includes(id: string): boolean {
         let all = this.getAll();
         emit(`Checking if walletId ${id} is in the list of wallets: ${JSON.stringify(all)}`);
-        for (let i = 0; i < all.length; i++) {            
+        for (let i = 0; i < all.length; i++) {
             let item = all[i];
             if (item.id == id) {
                 return true;
@@ -442,16 +442,16 @@ export class ChainedWallets extends ChainedItems<Wallet> {
     getInfo(): string {
         let str = "";
         let all = this.getAll();
-        for (let i = 0; i < all.length; i++) {            
+        for (let i = 0; i < all.length; i++) {
             let item = all[i];
             if (str.length > 0) {
                 str += ", ";
-            }            
+            }
             if (item) {
                 str += `{"id":"${item.id}","name":"${item.name}"}`;
             }
         }
         str = `[${str}]`;
         return str;
-    }        
+    }
 }

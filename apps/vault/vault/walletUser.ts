@@ -12,12 +12,12 @@ const WalletUsersTable = "WalletUsersTable";
  * - admin: can manage the wallet and its users
  * - internal user: can sign and verify transactions
  * - external user: can only sign transactions
- **/ 
+ **/
 @JSON
 export class WalletUser {
     id: string;
     walletId: string;
-    role: string;   
+    role: string;
 
     constructor(walletId: string, role: string) {
         this.id = b64encode(convertToUint8Array(Crypto.getRandomValues(64)));
@@ -31,7 +31,7 @@ export class WalletUser {
             revert(`WalletUser ${id} does not exist. Create it first`);
             return null;
         }
-        let user = JSON.parse<WalletUser>(userTable);        
+        let user = JSON.parse<WalletUser>(userTable);
         emit(`User wallet profile loaded successfully: '${user.id}' for wallet '${user.walletId}'`);
         return user;
     }
@@ -42,7 +42,7 @@ export class WalletUser {
         emit(`User saved successfully: '${this.id}'`);
     }
 
-    create(walletId: string, role: string): boolean {        
+    create(walletId: string, role: string): boolean {
         this.id = b64encode(convertToUint8Array(Crypto.getRandomValues(64)));
         this.walletId = walletId;
         this.role = role;
@@ -54,12 +54,12 @@ export class WalletUser {
 export class ChainedWalletUsers extends ChainedItems<WalletUser> {
     constructor() {
         super();
-    }    
+    }
 
     includes(walletId: string): index {
         let all = this.getAll();
         emit(`Checking if id "${walletId}" is in the list of wallets for this user: ${JSON.stringify(all)}`);
-        for (let i = 0; i < all.length; i++) {            
+        for (let i = 0; i < all.length; i++) {
             let item = all[i];
             if (item.walletId == walletId) {
                 return i;
@@ -81,12 +81,12 @@ export class ChainedWalletUsers extends ChainedItems<WalletUser> {
 
     add(user: WalletUser) : void {
         this.add_with_id(user, user.id);
-    }   
-    
+    }
+
     getInfo(): string {
         let str = "";
         let all = this.getAll();
-        for (let i = 0; i < all.length; i++) {            
+        for (let i = 0; i < all.length; i++) {
             let item = all[i];
             if (str.length > 0) {
                 str += ", ";
@@ -98,5 +98,5 @@ export class ChainedWalletUsers extends ChainedItems<WalletUser> {
         }
         str = `[${str}]`;
         return str;
-    }    
+    }
 }

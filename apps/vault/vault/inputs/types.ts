@@ -22,7 +22,7 @@ export class DeleteWalletInput {
     walletId: string;
 }
 
-@JSON 
+@JSON
 export class SignInput {
     walletId: string;
     keyId: string;
@@ -34,23 +34,24 @@ export class VerifyInput {
     walletId: string;
     keyId: string;
     payload: string;
-    signature: string;    
+    signature: string;
 }
 
-@JSON 
-export class AddUserInput {    
+@JSON
+export class AddUserInput {
     userId: string;
     role: string;
+    publicKey: string;
 }
 
-@JSON 
+@JSON
 export class RemoveUserInput {
-    userId: string;    
+    userId: string;
 }
 
-@JSON 
-export class AddUserToWalletInput {    
-    walletId: string;    
+@JSON
+export class AddUserToWalletInput {
+    walletId: string;
     userId: string;
     role: string;
 }
@@ -61,16 +62,16 @@ export class RemoveUserFromWalletInput {
     userId: string;
 }
 
-@JSON 
-export class RequestAccessInput {    
-    walletId: string;    
+@JSON
+export class RequestAccessInput {
+    walletId: string;
     userId: string;
     role: string;
 }
 
-@JSON 
-export class RequestWalletCreationInput {    
-    walletName: string;    
+@JSON
+export class RequestWalletCreationInput {
+    walletName: string;
     userId: string;
     role: string;
 }
@@ -80,17 +81,17 @@ export class ApproveRequestInput {
     requestId: string;
 }
 
-@JSON 
+@JSON
 export class AddKeyInput {
     walletId: string;
     description: string;
     type: string;
 }
 
-@JSON 
+@JSON
 export class RemoveKeyInput {
     walletId: string;
-    keyId: string;    
+    keyId: string;
 }
 
 @JSON
@@ -99,7 +100,7 @@ export class ListUsersInput {
 }
 
 @JSON
-export class ListWalletsInput {    
+export class ListWalletsInput {
     userId: string;
 }
 

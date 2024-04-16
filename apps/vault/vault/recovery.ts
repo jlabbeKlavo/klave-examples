@@ -32,7 +32,7 @@ export class Recovery {
     constructor() {
         this.backupKey = "";
         this.multiCustody = new Array<RecoveryUser>();
-    }    
+    }
 
     /**
      * load the recovery struct from the ledger.
@@ -60,7 +60,7 @@ export class Recovery {
 
     createDefault(): void {
         this.backupKey = b64encode(convertToUint8Array(Crypto.getRandomValues(64)));
-        let recoveryUser = new RecoveryUser(Context.get('sender'), b64encode(convertToUint8Array(Crypto.getRandomValues(20))));        
+        let recoveryUser = new RecoveryUser(Context.get('sender'), b64encode(convertToUint8Array(Crypto.getRandomValues(20))));
 
         emit("Please save the following recovery code in a safe place: {" + recoveryUser.code + "} for user: " + recoveryUser.id);
 
@@ -69,8 +69,8 @@ export class Recovery {
 
     /**
      * Read the file "words.json" and return a given number of random words.
-     * @param nb 
-     * @returns 
+     * @param nb
+     * @returns
      */
     getRandomWords(nb: number) : string {
         // const words = JSON.parse<string[]>("words.json");
@@ -84,7 +84,7 @@ export class Recovery {
     }
 
 
-    getRandomWordsViaHttp(nb: number) : string {             
+    getRandomWordsViaHttp(nb: number) : string {
         const query: HttpRequest = {
             hostname: 'random-word-api.herokuapp.com',
             port: 443,
@@ -92,7 +92,7 @@ export class Recovery {
             headers: [],
             body: ''
         };
-    
+
         const response = HTTP.request(query);
         if (!response) {
             revert(`HTTP call went wrong !`);

@@ -1,4 +1,4 @@
-import { Ledger, JSON, Context } from "@klave/sdk";
+import { Ledger, JSON, Context, Crypto } from "@klave/sdk";
 import { emit, index, revert } from "../klave/types"
 import { ChainedItems } from "../klave/chained";
 import { ChainedWalletUsers, WalletUser } from "./walletUser";
@@ -14,11 +14,13 @@ const UsersTable = "UsersTable";
 export class VaultUser {
     id: string;
     role: string;   //as in role for the vault itself, can be user of the vault and admin of a wallet
-    wallets: ChainedWalletUsers;    
+    publicKey: string;
+    wallets: ChainedWalletUsers;
 
     constructor() {
         this.id = "";
         this.role = "";
+        this.publicKey = "";
         this.wallets = new ChainedWalletUsers();
     }
 
@@ -28,7 +30,7 @@ export class VaultUser {
             revert(`User ${userId} does not exist. Create it first`);
             return null;
         }
-        let user = JSON.parse<VaultUser>(userTable);        
+        let user = JSON.parse<VaultUser>(userTable);
         emit(`User loaded successfully: '${user.id}'`);
         return user;
     }
@@ -43,16 +45,18 @@ export class VaultUser {
         let user = VaultUser.load(userId);
         if (!user) {
             return;
-        }        
+        }
         user.wallets.reset();
         Ledger.getTable(UsersTable).unset(userId);
         emit(`User deleted successfully: '${userId}'`);
     }
 
-    static create(role: string): VaultUser {
+    static create(role: string, publicKey: string): VaultUser {
         let user = new VaultUser();
         user.id = Context.get('sender');
         user.role = role;
+        user.publicKey = publicKey;
+        Crypto.ECDSA.importVerifyingKey("pkey" + user.id, publicKey);
         user.save();
         emit(`User created successfully: '${user.id}'`);
         return user;
@@ -90,12 +94,12 @@ export class VaultUser {
 export class ChainedVaultUsers extends ChainedItems<VaultUser> {
     constructor() {
         super();
-    }    
+    }
 
     includes(id: string): boolean {
         let all = this.getAll();
         emit(`Checking if userId ${id} is in the list of users: ${JSON.stringify(all)}`);
-        for (let i = 0; i < all.length; i++) {            
+        for (let i = 0; i < all.length; i++) {
             let item = all[i];
             if (item.id == id) {
                 return true;
@@ -122,16 +126,16 @@ export class ChainedVaultUsers extends ChainedItems<VaultUser> {
     getInfo(): string {
         let str = "";
         let all = this.getAll();
-        for (let i = 0; i < all.length; i++) {            
+        for (let i = 0; i < all.length; i++) {
             let item = all[i];
             if (str.length > 0) {
                 str += ", ";
-            }            
+            }
             if (item) {
                 str += `{"id":"${item.id}","role":"${item.role}"}`;
             }
         }
         str = `[${str}]`;
         return str;
-    }    
+    }
 }

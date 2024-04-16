@@ -12,10 +12,10 @@ const VaultTable = "VaultTable";
  * An Vault is associated with a list of users and holds keys.
  */
 @JSON
-export class Vault {    
+export class Vault {
     name: string;
     wallets: ChainedWallets;
-    users: ChainedVaultUsers;    
+    users: ChainedVaultUsers;
     accessRequests: ChainedAccessRequests;
     createRequests: ChainedCreateRequests;
     recoveryPolicy: Recovery;
@@ -28,7 +28,7 @@ export class Vault {
         this.createRequests = new ChainedCreateRequests();
         this.recoveryPolicy = new Recovery();
     }
-    
+
     /**
      * load the wallet from the ledger.
      * @returns true if the wallet was loaded successfully, false otherwise.
@@ -43,7 +43,7 @@ export class Vault {
         emit("Vault loaded successfully: " + JSON.stringify(vault));
         return vault;
     }
- 
+
     /**
      * save the wallet to the ledger.
      */
@@ -55,9 +55,9 @@ export class Vault {
 
     /**
      * rename the wallet.
-     * @param newName 
+     * @param newName
      */
-    rename(oldName: string, newName: string): void {        
+    rename(oldName: string, newName: string): void {
         if (!this.senderIsAdmin())
         {
             revert("You are not allowed to rename the wallet");
@@ -74,7 +74,7 @@ export class Vault {
     /**
      * Create a wallet with the given name.
      * Also adds the sender as an admin user.
-     * @param name 
+     * @param name
      */
     static create(name: string): void {
         let vault = Vault.load();
@@ -84,13 +84,13 @@ export class Vault {
         }
         vault = new Vault();
         vault.name = name;
-        vault.createProfile(Context.get('sender'), "admin", true);
+        vault.createProfile(Context.get('sender'), "admin", "", true);
         vault.recoveryPolicy.createDefault();
         vault.save();
-        emit("Vault created successfully: " + vault.name);        
+        emit("Vault created successfully: " + vault.name);
         return;
     }
-    
+
     /**
      * Create a profile for vault access.
      * An admin can actually add a profile with a specific role.
@@ -98,12 +98,12 @@ export class Vault {
      * @param userId The id of the user to add.
      * @param role The role of the user to add.
      */
-    createProfile(userId: string, role: string, force: boolean): boolean {
+    createProfile(userId: string, role: string, publicKey: string, force: boolean): boolean {
         if (!force && !this.senderIsAdmin())
         {
             revert("You are not allowed to create a profile with a specific role");
             role = "external user";
-            userId = Context.get('sender');            
+            userId = Context.get('sender');
         }
 
         let existingUser = VaultUser.load(userId);
@@ -111,7 +111,7 @@ export class Vault {
             revert("User already exists: " + userId);
             return false;
         }
-        let user = VaultUser.create(role);
+        let user = VaultUser.create(role, publicKey);
         this.users.add(user);
         emit("User added successfully: " + user.id);
         return true;
@@ -126,7 +126,7 @@ export class Vault {
         {
             revert("You are not allowed to remove a user");
             return false;
-        }        
+        }
         VaultUser.delete(userId);
         this.users.remove(userId);
         emit("User removed successfully: " + userId);
@@ -171,7 +171,7 @@ export class Vault {
             revert("You do not need to register an access request for this wallet");
         }
 
-        if (!this.createProfile(userId, role, false)) {
+        if (!this.createProfile(userId, role, "", false)) {
             return false;
         }
 
@@ -196,7 +196,7 @@ export class Vault {
         if (!wallet.senderIsAdmin()) {
             revert("You are not allowed to approve an access request");
             return false;
-        }        
+        }
         wallet.addUser(accessRequest.userId, accessRequest.role, true);
         wallet.save();
         this.accessRequests.remove(requestId);
@@ -214,7 +214,7 @@ export class Vault {
             return false;
         }
 
-        if (!this.createProfile(userId, role, false)) {
+        if (!this.createProfile(userId, role, "", false)) {
             return false;
         }
 
@@ -235,7 +235,7 @@ export class Vault {
         if (!this.senderIsAdmin()) {
             revert("You are not allowed to approve a create request");
             return false;
-        }        
+        }
         let wallet = Wallet.create(createRequest.walletName);
         if (!wallet) {
             return false;
@@ -308,7 +308,7 @@ export class Vault {
 
     /**
      * list all the wallets in the vault.
-     * @returns 
+     * @returns
      */
     listWallets(userId: string): void {
         let walletsStr: string = "";
@@ -323,8 +323,8 @@ export class Vault {
             else {
                 let user = VaultUser.load(userId);
                 if (!user) {
-                    revert(`User ${userId} does not exist`);      
-                    return;              
+                    revert(`User ${userId} does not exist`);
+                    return;
                 }
                 let allUserWallets = user.wallets.getAll();
                 for (let i = 0; i < allUserWallets.length; i++) {
@@ -348,8 +348,8 @@ export class Vault {
             }
             let user = VaultUser.load(userId);
             if (!user) {
-                return;              
-            }            
+                return;
+            }
             walletsStr += user.wallets.getInfo();
         }
         if (walletsStr.length == 0) {
@@ -360,7 +360,7 @@ export class Vault {
 
     /**
      * reset the vault to its initial state.
-     * @returns 
+     * @returns
      */
     reset(wallets: Array<string>): void {
         if (!this.senderIsAdmin())
@@ -370,7 +370,7 @@ export class Vault {
         }
 
         if (wallets.length == 0) {
-            this.name = "";        
+            this.name = "";
             this.wallets = new ChainedWallets();
             this.users = new ChainedVaultUsers();
             emit("Vault reset successfully");
@@ -414,7 +414,7 @@ export class Vault {
         if (users.length == 0) {
             emit(`No users found in the vault`);
         }
-        emit(`Users in the vault: ${users}`);                
+        emit(`Users in the vault: ${users}`);
     }
 
     /**

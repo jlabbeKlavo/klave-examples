@@ -177,7 +177,7 @@ export function createProfile(input: AddUserInput): void {
     if (!vault) {
         return;
     }
-    if (vault.createProfile(input.userId, input.role, false)) {
+    if (vault.createProfile(input.userId, input.role, input.publicKey, false)) {
         vault.save();
     }
 }

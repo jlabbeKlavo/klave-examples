@@ -11,7 +11,7 @@ const KeysTable = "KeysTable";
  * Key class
  * Note that the Key class is a JSON class, which means that it can be serialized and deserialized to/from JSON.
  * This is useful when storing the Key object in the ledger.
- * A private key 
+ * A private key
  */
 
 
@@ -29,21 +29,21 @@ export class Key {
         this.owner = "";
     }
 
-    static load(keyId: string) : Key | null {        
+    static load(keyId: string) : Key | null {
         let keyTable = Ledger.getTable(KeysTable).get(keyId);
         if (keyTable.length == 0) {
             revert("Key does not exist. Create it first");
             return null;
         }
-        let key = JSON.parse<Key>(keyTable);        
-        emit(`Key loaded successfully: '${key.id}'`);        
+        let key = JSON.parse<Key>(keyTable);
+        emit(`Key loaded successfully: '${key.id}'`);
         return key;
     }
 
     save(): void {
         let keyTable = JSON.stringify<Key>(this);
         Ledger.getTable(KeysTable).set(this.id, keyTable);
-        emit(`User saved successfully: '${this.id}'`);        
+        emit(`User saved successfully: '${this.id}'`);
     }
 
     static create(description: string, type: string): Key | null {
@@ -82,7 +82,7 @@ export class Key {
         let key = Key.load(keyId);
         if (!key) {
             return;
-        }        
+        }
         key.reset();
         Ledger.getTable(KeysTable).unset(keyId);
         emit(`Key deleted successfully: '${keyId}'`);
@@ -105,7 +105,7 @@ export class Key {
         if (this.type != "ECDSA") {
             revert("ERROR: Key type is not ECDSA")
             return null;
-        }        
+        }
         return sign(new SignInput(this.id, message));
     }
 
@@ -113,20 +113,20 @@ export class Key {
         if (this.type != "ECDSA") {
             revert("ERROR: Key type is not ECDSA")
             return false;
-        }       
+        }
         return verify(new VerifyInput(this.id, message, signature));
-    }    
+    }
 
     encrypt(message: string): string {
         if (this.type != "AES") {
             revert("ERROR: Key type is not AES");
             return "";
-        }        
+        }
         let KeyAES = Crypto.AES.getKey(this.id);
         if (!KeyAES) {
             revert("ERROR: Key not found");
             return "";
-        }        
+        }
         return b64encode(convertToUint8Array(KeyAES.encrypt(message)));
     }
 
@@ -134,12 +134,12 @@ export class Key {
         if (this.type != "AES") {
             revert("ERROR: Key type is not AES");
             return "";
-        }        
+        }
         let KeyAES = Crypto.AES.getKey(this.id);
         if (!KeyAES) {
             revert("ERROR: Key not found");
             return "";
-        }        
+        }
         return KeyAES.decrypt(convertToU8Array(b64decode(cypher)));
     }
 
@@ -164,11 +164,11 @@ export class Key {
 export class ChainedKeys extends ChainedItems<Key> {
     constructor() {
         super();
-    }    
+    }
 
     includes(id: string): boolean {
         let all = this.getAll();
-        for (let i = 0; i < all.length; i++) {            
+        for (let i = 0; i < all.length; i++) {
             let item = all[i];
             if (item.id == id) {
                 return true;

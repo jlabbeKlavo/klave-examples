@@ -58,12 +58,12 @@ export class CreateRequest extends Request {
 export class ChainedCreateRequests extends ChainedItems<CreateRequest> {
     constructor() {
         super();
-    }    
+    }
 
     includes(id: string): boolean {
         let all = this.getAll();
         emit(`Checking if requestId ${id} is in the list of requests: ${JSON.stringify(all)}`);
-        for (let i = 0; i < all.length; i++) {            
+        for (let i = 0; i < all.length; i++) {
             let item = all[i];
             if (item.id == id) {
                 return true;
@@ -90,16 +90,16 @@ export class ChainedCreateRequests extends ChainedItems<CreateRequest> {
     getInfo(): string {
         let str = "";
         let all = this.getAll();
-        for (let i = 0; i < all.length; i++) {            
+        for (let i = 0; i < all.length; i++) {
             let item = all[i];
             if (str.length > 0) {
                 str += ", ";
-            }            
+            }
             if (item) {
                 str += `{"id":"${item.id}","walletName":"${item.walletName}","userId":"${item.userId}","role":"${item.role}"}`;
             }
         }
         str = `[${str}]`;
         return str;
-    }    
+    }
 }
